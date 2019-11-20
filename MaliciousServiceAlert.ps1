@@ -3,8 +3,9 @@
 # This Shell is for identifying a when an unusual service is being run possibly indicating credentials were compromised.         #
 #                                                                                                                                #
 # I suggest running this script in task scheduler to be triggered whenever EVent ID 7045 occurs.                                 #
+#                                                                                                                                #
 # Author: Robert Osborne                                                                                                         #
-    # Alias: tobor                                                                                                               #
+# Alias: tobor                                                                                                                   #
 # https://roberthosborne.com                                                                                                     #
 #                                                                                                                                #
 ##################################################################################################################################
