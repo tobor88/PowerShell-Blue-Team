@@ -3,8 +3,10 @@
     Disable-WeakSSL
 
 .SYNOPSIS
-    Disable-WeakSSL is a cmdlet created to disable weak SSL protocols on an IIS Server.DESCRIPTION
-    This cmdlet has the option to disable the weak ciphers such as TipleDES, RC4, and disabled null.DESCRIPTION
+    Disable-WeakSSL is a cmdlet created to disable weak SSL protocols on an IIS Server
+    
+.DESCRIPTION
+    This cmdlet has the option to disable the weak ciphers such as TipleDES, RC4, and disabled null.
     SSL 2.0, 3.0, TLS 1.0 are disabled in another option. TLS 1.1 and 1.2 are enabled no matter what.
 
 .DESCRIPTION
