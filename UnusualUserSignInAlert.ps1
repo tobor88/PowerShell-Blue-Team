@@ -1,12 +1,25 @@
-# This PowerShell function is useful in an environment where users can log into any computer but are assigned maybe 1, 2, or 3+ computers they usually sign into.DESCRIPTION
-# What this script does is query the event log for the last 24 hours. Anywhere a successful logon happens (Event ID 4624) for that user is counted.DESCRIPTION
-# That count is then compared to he count of how many of those logins were on their assigned devices.DESCRIPTION
-# The logins that occured on devices outside the norm are then emailed to the IT admin informing them of the event(s).
-#
-# This is a little niche to a smaller environment. I learned a lot writing this one and will do a blog on it at https://powershell.org
-# IMPORTANTL For this to work you will need a CSV file containing the user and their assigned devices.
-#             That info is imported from the CSV before it can be worked with.
+<#
+.SYNOPSIS
+    This PowerShell script is useful in an environment where users can log into any computer but are assigned maybe 1, 2, or 3+ 
+    computers.
+    
+.DESCRIPTION
+ What this script does is query the event log for the last 24 hours. Anywhere a successful logon happens (Event ID 4624) 
+ the IP Address is noted and comapred to the assigned IP Address list located in a CSV File you create.
+ You can then have it notify you of the sign in by email.
 
+ This is a little niche to a smaller environment. I learned a lot writing this one and will do a blog on it at https://powershell.org
+ 
+ IMPORTANT: For this to work you will need a CSV file containing the user and their assigned devices.
+  
+  That info is imported from the CSV before it can be worked with.
+  
+.NOTES
+    Author: Rob Osborne
+    Alias: tobor
+    CONTACT: rosborne@osbornepro.com
+    https://roberthosborne.com
+#>
 Function Get-UserSid
 {
     [CmdletBinding()]
