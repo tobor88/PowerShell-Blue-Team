@@ -13,6 +13,7 @@ param()
     Write-Verbose "Monitors for Bind Shells"
 
     $PreviouslyOpenPorts = "78"
+    # I dont use the email alert for alerting me when new ports are opened however the option is available if you want it
 
     $CurrentlyOpenPorts = Get-NetTCPConnection -State 'Listen' | Group-Object -Property 'LocalPort' -NoElement
 
