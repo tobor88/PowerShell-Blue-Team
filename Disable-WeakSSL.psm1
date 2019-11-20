@@ -8,7 +8,8 @@
     SSL 2.0, 3.0, TLS 1.0 are disabled in another option. TLS 1.1 and 1.2 are enabled no matter what.
 
 .DESCRIPTION
-    Define weak protocls you would like to disable. Restart the computer now or have it restart at another time.
+    Define weak protocols you would like to disable. 
+    You will be given to restart the computer now or later after the cmdlet executes.
 
 .NOTES
     Author: Rob Osborne
@@ -54,7 +55,7 @@
         about_CommonParameters (https:/go.microsoft.com/fwlink/?LinkID=113216).
 
 .INPUTS
-    You can not pupe objects to this cmdlet. It sets registry settings.DESCRIPTION
+    You can not pipe objects to this cmdlet. It sets registry settings.
 
 .OUTPUTS
     There are no objects output from this cmdlet. It sets registry settings.
