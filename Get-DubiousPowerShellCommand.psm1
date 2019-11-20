@@ -2,11 +2,14 @@
 .NAME Get-DubiousPowerShellCommand
 
 .SYNOPSIS
-    This is best used as a scheduled task that runs every 15 minutes. It checks the event log for maliciously used powershell commands.DESCRIPTION
-    This will require powershell command logging in the windows event log. We need Event ID 300
+    This is best used as a scheduled task that runs every 15 minutes. It checks the event log for maliciously used powershell commands
+    Servers require more protections than everyday desktops. That is what this is meant for.
 
 .DESCRIPTION
+    This will require powershell command logging in the windows event log. We need Event ID 300
     This will send an email alert whenever a possibly malicous command is executed. Best used as a task on servers.
+    A malicious command is defined as involving IEX, bitsadmin, certutil -f, and Start-BitsTransfer
+    Vssadmin was added as well to discover if an admin attacker is trying to shadow clone password hashes
 
 .SYNTAX
     Get-DubiousPowerShellCommand
@@ -99,7 +102,12 @@ Function Get-DubiousPowerShellCommand {
     END
     {
 
-        If ( ($More.Value -like "*IEX (New-Object net.webclient).downloadstring(*") -or ($More.Value -like "Certutil*-f*") -or ($More.Value -like "vssadmin*") -or ($More.Value -like "bitsadmin*") -or ($More.Value -like "Start-BitsTransfer*") -or ($More.Value -like "Invoke-Expression*") )
+        If ( ($More.Value -like "*IEX (New-Object net.webclient).downloadstring(*")`
+            -or ($More.Value -like "Certutil*-f*") `
+            -or ($More.Value -like "vssadmin*") `
+            -or ($More.Value -like "bitsadmin*") `
+            -or ($More.Value -like "Start-BitsTransfer*") `
+            -or ($More.Value -like "Invoke-Expression*") )
         {
             $Css = @"
 <style>
