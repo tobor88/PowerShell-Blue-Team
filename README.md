@@ -29,12 +29,12 @@ PS> .\NewOpenPortMonitor.ps1
 - #### Search-ForCompromise.ps1 
 This cmdlet is used for discovering possibly malicious changes on a machine. It will require a reference copy of the hosts file in Windows. It also requires a list of known applications and known Current User Applications as a reference. I have it set up to update these files if they are located in a network share which is what I use.   
     It checks the following items
-        1. Sorts the heaviest processes. Make sure they are all legit.
-        2. If the hosts file has been altered the IP Addresses are displayed. The function then requires the admin to enter the IP Addresses manually. This will close any open connections and prevent any more connections to the discovered IP Addresses.
-        3. If an altered start page is configured it will be shown to the admin who will need to remove the setting.
-        4. Checks local machine and current user registry for any previously unknown applications and shows the unknown apps to the admin. The admin should verify these applications are safe.
-        5. Make sure no proxy settings have been configured/altered.
-        6. Lastly any Alternate Data Streams are looked for and identified
+1. Sorts the heaviest processes. Make sure they are all legit.
+2. If the hosts file has been altered the IP Addresses are displayed. The function then requires the admin to enter the IP Addresses manually. This will close any open connections and prevent any more connections to the discovered IP Addresses.
+3. If an altered start page is configured it will be shown to the admin who will need to remove the setting.
+4. Checks local machine and current user registry for any previously unknown applications and shows the unknown apps to the admin. The admin should verify these applications are safe.
+5. Make sure no proxy settings have been configured/altered.
+6. Lastly any Alternate Data Streams are looked for and identified
 ```powershell
 Search-ForCompromise -Verbose
 ```
