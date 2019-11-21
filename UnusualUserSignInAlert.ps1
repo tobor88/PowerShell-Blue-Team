@@ -5,7 +5,7 @@
     
 .DESCRIPTION
  What this script does is query the event log for the last 24 hours. Anywhere a successful logon happens (Event ID 4624) 
- the IP Address is noted and comapred to the assigned IP Address list located in a CSV File you create.
+ the IP Address is noted and compared to the assigned IP Address list located in a CSV File you create.
  You can then have it notify you of the sign in by email.
 
  This is a little niche to a smaller environment. I learned a lot writing this one and will do a blog on it at https://powershell.org
