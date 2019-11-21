@@ -21,7 +21,10 @@ PS> Get-NewlyInstalledService -SmtpServer mail.smtp2go.com -To rosborne@osbornep
 ```
 
 - #### NewOpenPortMonitor.ps1 
-
+This script is meant to be run by Task Scheduler. Any unique connections made with a server are documented and placed into a log file. Any IPv4 addresses that are able to be resolved are resolved and placed in a document C:/Users/ConnectionDNSHistory.csv. Any server Internet connections are logged into a separate file C/Users/Public/Documents/ConnectionHistroy.csv. You are able to configure alerts by receiving an email anytime a new port has been opened as a listener on a device. I do not use the alerts as I have not worked on perfecting that part as this is one of my first written scripts. Stil very useful.
+```powershell
+PS> .\NewOpenPortMonitor.ps1
+```
 
 - #### Search-ForCompromise.ps1 
 
