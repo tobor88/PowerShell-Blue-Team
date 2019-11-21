@@ -36,7 +36,12 @@ This cmdlet is used for discovering possibly malicious changes on a machine. It 
 5. Make sure no proxy settings have been configured/altered.
 6. Lastly any Alternate Data Streams are looked for and identified
 ```powershell
-Search-ForCompromise -Verbose
+PS> Search-ForCompromise -Verbose
 ```
 
 - #### UnusualUserSignInAlert.ps1
+This is another script I am very proud of. This script is useful in an environment where users can log into any computer but are assigned maybe 1, 2, or 3+.  What this script does is query the event log for the last 24 hours. Anywhere a successful logon happens (Event ID 4624), the IP Address is noted and compared to the assigned IP Address list located in a CSV File you create. You can then have it notify you of the sign in by email. This is a little niche to a smaller environment. 
+__IMPORTANT:__ For this to work you will need a CSV file containing the user and their assigned devices. That info is imported from the CSV before it can be worked with.
+```powershell
+PS> .\UnusualUserSignInAlert.ps1
+```
