@@ -170,7 +170,7 @@ Function Search-ForCompromise {
             $LMAppRef = Import-Csv -Path $ControlAppListFile
             $LMAppDiff = Get-ChildItem -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\' | Select-Object -Property PSChildName
 
-            If ($LMApplist = Compare-Object -DifferenceObject $LMAppDiff -ReferenceObject $LMAppRef -Property PsChildName | Where-Object -Property SideIndicator -like "<=" | Select-Object -ExpandProperty PSChildName ) 
+            If ($LMApplist = Compare-Object -DifferenceObject $LMAppDiff -ReferenceObject $LMAppRef -Property PsChildName | Where-Object -Property SideIndicator -like "<=" | Select-Object -Property PSChildName ) 
             {
             
                 $LMApplist
@@ -192,7 +192,7 @@ Function Search-ForCompromise {
             $CUAppRef = Import-Csv -Path $ControlCUAppListFile
             $CUAppDiff = Get-ChildItem -Path 'HKCU:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\' | Select-Object -Property PSChildName
 
-            If ($Applist = Compare-Object -DifferenceObject $CUAppDiff -ReferenceObject $CUAppRef -Property PsChildName | Where-Object -Property SideIndicator -like "<=" | Select-Object -ExpandProperty PSChildName ) 
+            If ($Applist = Compare-Object -DifferenceObject $CUAppDiff -ReferenceObject $CUAppRef -Property PsChildName | Where-Object -Property SideIndicator -like "<=" | Select-Object -Property PSChildName ) 
             {
             
                 $CUApplist
