@@ -46,7 +46,7 @@ Function Get-DubiousPowerShellCommand {
                 ValueFromPipeLine=$True,
                 ValueFromPipeLineByPropertyName=$True,
                 HelpMessage="Enter your SMTP Server to use for sending the email. Example: mail.smtp2go.com")]
-            [Syste.Net.Mail.MailAddress]$SmtpServer) # End param
+            [String]$SmtpServer) # End param
 
     BEGIN
     {
@@ -55,7 +55,19 @@ Function Get-DubiousPowerShellCommand {
 
         Write-Verbose "Checking event log for malicious commands..."
 
-        [array]$BadEvent = Get-WinEvent -FilterHashtable @{logname="Windows PowerShell"; id=800} -MaxEvents 100 | Where-Object { ($_.Message -like "*Pipeline execution details for command line:*IEX*") -or ($_.Message -like "*Pipeline execution details for command line:*certutil") -or ($_.Message -like "*Pipeline execution details for command line:*bitsadmin*") -or ($_.Message -like "*Pipeline execution details for command line:*Start-BitsTransfer*") -or ($_.Message -like "*Pipeline execution details for command line:*vssadmin*") -or ($_.Message -like "*Pipeline execution details for command line:*Invoke-Expression*") }
+        [array]$BadEvent = Get-WinEvent -FilterHashtable @{logname="Windows PowerShell"; id=800} -MaxEvents 100 | Where-Object { ($_.Message -like "*Pipeline execution details for command line: IEX*") `
+                                -or ($_.Message -like "*Pipeline execution details for command line: cmd /c certutil") `
+                                -or ($_.Message -like "*Pipeline execution details for command line: certutil") `
+                                -or ($_.Message -like "*Pipeline execution details for command line: cmd /c bitsadmin*") `
+                                -or ($_.Message -like "*Pipeline execution details for command line: bitsadmin*") `
+                                -or ($_.Message -like "*Pipeline execution details for command line: Start-BitsTransfer*") `
+                                -or ($_.Message -like "*Pipeline execution details for command line: cmd /c vssadmin*")  `
+                                -or ($_.Message -like "*Pipeline execution details for command line: vssadmin*") `
+                                -or ($_.Message -like "*Pipeline execution details for command line: Invoke-Expression*") `
+                                -or ($_.Message -like "*Pipeline execution details for command line: Invoke-WebRequest*") `
+                                -and ($_.Message -notlike "**Pipeline execution details for command line:*Get-WinEvent*" )
+                                }  # End FilterHashTable
+
 
     } # End BEGIN
 
@@ -65,50 +77,35 @@ Function Get-DubiousPowerShellCommand {
         If (($BadEvent.Properties.Item(0) | Select-Object -ExpandProperty 'Value' | Out-String) -like "IEX*") {$EventInfo = $BadEvent}
         Elseif (($BadEvent.Properties.Item(0) | Select-Object -ExpandProperty 'Value' | Out-String) -like "Invoke-Expression*") {$EventInfo = $BadEvent}
         Elseif (($BadEvent.Properties.Item(0) | Select-Object -ExpandProperty 'Value' | Out-String) -like "certutil*") {$EventInfo = $BadEvent}
+        Elseif (($BadEvent.Properties.Item(0) | Select-Object -ExpandProperty 'Value' | Out-String) -like "cmd /c certutil*") {$EventInfo = $BadEvent}
         Elseif (($BadEvent.Properties.Item(0) | Select-Object -ExpandProperty 'Value' | Out-String) -like "bitsadmin*") {$EventInfo = $BadEvent}
+        Elseif (($BadEvent.Properties.Item(0) | Select-Object -ExpandProperty 'Value' | Out-String) -like "cmd /c bitsadmin*") {$EventInfo = $BadEvent}
         Elseif (($BadEvent.Properties.Item(0) | Select-Object -ExpandProperty 'Value' | Out-String) -like "Start-BitsTransfer*") {$EventInfo = $BadEvent}
+        Elseif (($BadEvent.Properties.Item(0) | Select-Object -ExpandProperty 'Value' | Out-String) -like "vssadmin*") {$EventInfo = $BadEvent}
+        Elseif (($BadEvent.Properties.Item(0) | Select-Object -ExpandProperty 'Value' | Out-String) -like "cmd /c vssadmin*") {$EventInfo = $BadEvent}
+        Elseif (($BadEvent.Properties.Item(0) | Select-Object -ExpandProperty 'Value' | Out-String) -like "Invoke-WebRequest*") {$EventInfo = $BadEvent}
+        Else { exit }
 
-        If ($null -eq $EventInfo)
+        If ($EventInfo -like $null)
         {
 
-            Write-Verbose "No malicious commands have been found. Ending rest of script execution. "
+            Write-Host "No malicious commands have been found. Ending rest of script execution. " -ForegroundColor Green
 
-            break
+            exit
 
         } # End If
+        Else
+        {
+
+            Write-Host "A malicious command may have been found..." -ForegroundColor Red 
+
+        }  # End Else
 
         $More = $EventInfo.Properties.Item(0)
 
-        [array]$UserList = Get-ChildItem -Path 'C:\Users' -ErrorAction 'SilentlyContinue' | Select-Object -ExpandProperty 'Name'
-        [array]$Check = @()
-
-        ForEach ($User in $UserList)
-        {
-
-            $HistoryFile = "C:\Users\$User\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadline\ConsoleHost_history.txt"
-
-            $Check += Get-Content -Path $HistoryFile | Select-String -SimpleMatch "IEX(New-Object Net.WebClient).downloadString("
-            $Check += Get-Content -Path $HistoryFile | Select-String -SimpleMatch "IEX (New-Object Net.WebClient).downloadString("
-            $Check += Get-Content -Path $HistoryFile | Select-String -SimpleMatch "Invoke-Expression"
-            $Check += Get-Content -Path $HistoryFile | Select-String -SimpleMatch "certutil"
-            $Check += Get-Content -Path $HistoryFile | Select-String -SimpleMatch "vssadmin"
-            $Check += Get-Content -Path $HistoryFile | Select-String -SimpleMatch "bitsadmin"
-            $Check += Get-Content -Path $HistoryFile | Select-String -SimpleMatch "Start-BitsTransfer"
-
-        } # End ForEach
-
     } # End PROCESS
-
     END
     {
-
-        If ( ($More.Value -like "*IEX (New-Object net.webclient).downloadstring(*")`
-            -or ($More.Value -like "Certutil*-f*") `
-            -or ($More.Value -like "vssadmin*") `
-            -or ($More.Value -like "bitsadmin*") `
-            -or ($More.Value -like "Start-BitsTransfer*") `
-            -or ($More.Value -like "Invoke-Expression*") )
-        {
             $Css = @"
 <style>
 table {
@@ -148,16 +145,12 @@ td {
 
             Send-MailMessage -From $From -To $To -Subject "Possible PowerShell Attack on $Computer" -BodyAsHtml -Body $MailBody -SmtpServer $SmtpServer
 
-        } # End If
-        Else
-        {
-
-            Write-Verbose "No malicious commands found. "
-
-        } # End Else
-
     } # End END
 
 } # End Function Get-DubiousPowerShellCommand
+
+$To = <email@domain.com>
+$From = <email@domain.com>
+$SmtpServer = <smtp server>
 
 Get-DubiousPowerShellCommand -To $To -From $From -SmtpServer $SmtpServer -Verbose
