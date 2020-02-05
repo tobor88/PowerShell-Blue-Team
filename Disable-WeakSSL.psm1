@@ -93,7 +93,7 @@ Function Disable-WeakSSL
     If ($WeakCiphers.IsPresent)
     {
 
-        $RegKeys = 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\Triple DES 168168', 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\NULL', 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\DES 5656', 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\RC4 56128', 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\RC4 64128', 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\RC4 40128', 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\RC4 128128'
+        $RegKeys = 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\Triple DES 168/168', 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\NULL', 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\DES 56/56', 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\RC4 56/128', 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\RC4 64/128', 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\RC4 40/128', 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\RC4 128/128'
 
         Write-Verbose "Disabling Weak SSL protocols..."
 
@@ -166,7 +166,8 @@ Function Disable-WeakSSL
                 } # End If
 
                 Set-ItemProperty -Path $SSRegKey -Name 'DisabledByDefault' -Type 'Dword' -Value '1'
-
+                
+                Set-ItemProperty -Path $SSRegKey -Name 'Enabled' -Type 'Dword' -Value '0'
         } # End ForEach
 
     } # End If WeakSSLandTLS
@@ -207,6 +208,7 @@ Function Disable-WeakSSL
         } # End If
 
         Set-ItemProperty -Path $TSRegKey -Name 'DisabledByDefault' -Type 'Dword' -Value '0'
+       
 
     } # End ForEach
 
