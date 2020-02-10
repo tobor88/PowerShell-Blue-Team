@@ -71,7 +71,6 @@
     # This example enables all of the strong protocols but does not disable any weak ones.
 
 #>
-
 Function Disable-WeakSSL
 {
     [CmdletBinding()]
@@ -87,45 +86,46 @@ Function Disable-WeakSSL
         ) # End param
 
 
-    $AESRegKey = "HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\AES 256256"
-
-
     If ($WeakCiphers.IsPresent)
     {
 
-        $RegKeys = 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\Triple DES 168/168', 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\NULL', 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\DES 56/56', 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\RC4 56/128', 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\RC4 64/128', 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\RC4 40/128', 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\RC4 128/128'
-
         Write-Verbose "Disabling Weak SSL protocols..."
+        
+        # Disable NULL Cipher
+        New-Item 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\NULL' -Force | Out-Null 
+        New-ItemProperty -path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\NULL' -name 'Enabled' -value '0' -PropertyType 'DWord' -Force | Out-Null 
+        
+        # Disable DES Cipher
+        (Get-Item 'HKLM:\').OpenSubKey('SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers', $true).CreateSubKey('DES 56/56') 
+        New-ItemProperty -path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\DES 56/56' -name 'Enabled' -value '0' -PropertyType 'DWord' -Force | Out-Null 
+        (Get-Item 'HKLM:\').OpenSubKey('SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers', $true).CreateSubKey('Triple DES 168/168') 
+        New-ItemProperty -path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\Triple DES 168/168' -name 'Enabled' -value '0' -PropertyType 'DWord' -Force | Out-Null
 
-        ForEach ($RegKey in $RegKeys)
-        {
+        # Disable RC4
+        (Get-Item 'HKLM:\').OpenSubKey('SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers', $true).CreateSubKey('RC4 40/128') 
+        New-ItemProperty -path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\RC4 40/128' -name 'Enabled' -value '0' -PropertyType 'DWord' -Force | Out-Null 
+        (Get-Item 'HKLM:\').OpenSubKey('SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers', $true).CreateSubKey('RC4 56/128') 
+        New-ItemProperty -path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\RC4 56/128' -name 'Enabled' -value '0' -PropertyType 'DWord' -Force | Out-Null 
+        (Get-Item 'HKLM:\').OpenSubKey('SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers', $true).CreateSubKey('RC4 64/128') 
+        New-ItemProperty -path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\RC4 64/128' -name 'Enabled' -value '0' -PropertyType 'DWord' -Force | Out-Null 
+        (Get-Item 'HKLM:\').OpenSubKey('SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers', $true).CreateSubKey('RC4 128/128') 
+        New-ItemProperty -path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\RC4 128/128' -name 'Enabled' -value '0' -PropertyType 'DWord' -Force | Out-Null 
 
-            If (-Not(Test-Path -Path $RegKey))
-            {
+        # Disable AES 128/128
+        # UNCOMMENT THE BELOW LINES TO DISABLE AES 128
+        #(Get-Item 'HKLM:\').OpenSubKey('SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers', $true).CreateSubKey('AES 128/128') 
+        #New-ItemProperty -path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\AES 128/128' -name 'Enabled' -value '0' -PropertyType 'DWord' -Force | Out-Null 
 
-                New-Item -Path “$($RegKey.TrimEnd($RegKey.Split(‘\’)[-1]))” -Name “$($RegKey.Split(‘\’)[-1])” -Force | Out-Null
-
-            } # End If
-
-        Set-ItemProperty -Path $RegKey -Name 'Enabled' -Type 'Dword' -Value '0'
-
-        } # End ForEach
-
-    } # End If WeakCiphers
+    }  # End If WrakCiphers
 
     If ($StrongAES.IsPresent)
     {
 
         Write-Verbose "Setting AES 256 registry values..."
 
-        If (-Not(Test-Path -Path $AESRegKey))
-        {
-
-            New-Item -Path “$($AESRegKey.TrimEnd($AESRegKey.Split(‘\’)[-1]))” -Name “$($AESRegKey.Split(‘\’)[-1])” -Force | Out-Null
-
-        } # End If
-
-        Set-ItemProperty -Path $AESRegKey -Name 'Enabled' -Type 'Dword' -Value '4294967295'
+        # Enable AES 256
+        (Get-Item 'HKLM:\').OpenSubKey('SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers', $true).CreateSubKey('AES 256/256') 
+        New-ItemProperty -path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Ciphers\AES 256/256' -name 'Enabled' -value '1' -PropertyType 'DWord' -Force | Out-Null 
 
     } # End If StrongAES
 
@@ -134,82 +134,46 @@ Function Disable-WeakSSL
 
         Write-Verbose "Setting TLS 1.0 and SSL 2.0 and 3.0 registry settings to a disabled state..."
 
-        $SSLRegKeys = 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\SSL 2.0\Server', 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\SSL 3.0\Server', 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.0\Server'
+        # Disable SSL 2.0 
+        New-Item 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\SSL 2.0\Server' -Force | Out-Null 
+        New-Item 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\SSL 2.0\Client' -Force | Out-Null 
+        New-ItemProperty -path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\SSL 2.0\Server' -name 'Enabled' -value '0' -PropertyType 'DWord' -Force | Out-Null 
+        New-ItemProperty -path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\SSL 2.0\Client' -name 'Enabled' -value '0' -PropertyType 'DWord' -Force | Out-Null 
+        New-ItemProperty -path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\SSL 2.0\Server' -name 'DisabledByDefault' -value '1' -PropertyType 'DWord' -Force | Out-Null 
+        New-ItemProperty -path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\SSL 2.0\Client' -name 'DisabledByDefault' -value '1' -PropertyType 'DWord' -Force | Out-Null 
+        
+        # Disable SSL 3.0
+        New-Item 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\SSL 3.0\Server' -Force | Out-Null 
+        New-Item 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\SSL 3.0\Client' -Force | Out-Null 
+        New-ItemProperty -path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\SSL 3.0\Server' -name 'Enabled' -value '0' -PropertyType 'DWord' -Force | Out-Null 
+        New-ItemProperty -path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\SSL 3.0\Client' -name 'Enabled' -value '0' -PropertyType 'DWord' -Force | Out-Null 
+        New-ItemProperty -path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\SSL 3.0\Server' -name 'DisabledByDefault' -value '1' -PropertyType 'DWord' -Force | Out-Null 
+        New-ItemProperty -path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\SSL 3.0\Client' -name 'DisabledByDefault' -value '1' -PropertyType 'DWord' -Force | Out-Null
 
-        ForEach ($SSLRegKey in $SSLRegKeys)
-        {
-
-            If (!(Test-Path -Path $SSLRegKey))
-            {
-
-                New-Item -Path “$($SSLRegKey.TrimEnd($SSLRegKey.Split(‘\’)[-1]))” -Name “$($SSLRegKey.Split(‘\’)[-1])” -Force | Out-Null
-
-            } # End If
-
-            Set-ItemProperty -Path “$SSLRegKey” -Name 'Enabled' -Type 'Dword' -Value '0'
-
-            Set-ItemProperty -Path “$SSLRegKey” -Name 'DisabledByDefault' -Type 'Dword' -Value '1'
-
-            } # End ForEach
-
-            # Sets TLS 1.0 and SSL 2.0 and 3.0 Settings for Client
-            $SSRegKeys = "HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\SSL 2.0\Client", "HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\SSL 3.0\Client", "HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.0\Client"
-
-            ForEach ($SSRegKey in $SSRegKeys)
-            {
-
-                If (-Not(Test-Path -Path $SSRegKey))
-                {
-
-                    New-Item -Path “$($SSRegKey.TrimEnd($SSRegKey.Split(‘\’)[-1]))” -Name “$($SSRegKey.Split(‘\’)[-1])” -Force | Out-Null
-
-                } # End If
-
-                Set-ItemProperty -Path $SSRegKey -Name 'DisabledByDefault' -Type 'Dword' -Value '1'
-                
-                Set-ItemProperty -Path $SSRegKey -Name 'Enabled' -Type 'Dword' -Value '0'
-        } # End ForEach
-
+        # Disable TLS 1.0
+        New-Item 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.0\Server' -Force | Out-Null 
+        New-Item 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.0\Client' -Force | Out-Null 
+        New-ItemProperty -path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.0\Server' -name 'Enabled' -value '0' -PropertyType 'DWord' -Force | Out-Null 
+        New-ItemProperty -path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.0\Client' -name 'Enabled' -value '0' -PropertyType 'DWord' -Force | Out-Null 
+        New-ItemProperty -path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.0\Server' -name 'DisabledByDefault' -value '1' -PropertyType 'DWord' -Force | Out-Null 
+        New-ItemProperty -path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.0\Client' -name 'DisabledByDefault' -value '1' -PropertyType 'DWord' -Force | Out-Null 
+   
     } # End If WeakSSLandTLS
 
 
     Write-Verbose "Enabling registry settings for TLS 1.1 and 1.2 settings for Server"
 
-    $TLSRegKeys = "HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.1\Server", "HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.2\Server"
+    # Enable TLS 1.2
+    New-Item 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.2\Server' -Force | Out-Null 
+    New-ItemProperty -path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.2\Server' -name 'Enabled' -value '1' -PropertyType 'DWord' -Force | Out-Null 
+    New-ItemProperty -path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.2\Server' -name 'DisabledByDefault' -value '0' -PropertyType 'DWord' -Force | Out-Null 
 
-    ForEach ($TLSRegKey in $TLSRegKeys)
-    {
-
-        If (-Not(Test-Path -Path $TLSRegKey))
-        {
-
-            New-Item -Path “$($TLSRegKey.TrimEnd($TLSRegKey.Split(‘\’)[-1]))” -Name “$($TLSRegKey.Split(‘\’)[-1])” -Force | Out-Null
-
-        } # End If
-
-        Set-ItemProperty -Path $TLSRegKey -Name 'Enabled' -Type 'Dword' -Value '1'
-
-        Set-ItemProperty -Path $TLSRegKey -Name 'DisabledByDefault' -Type 'Dword' -Value '0'
-
-    } # End ForEach
-
-    Write-Verbose "Enabling registry settings for TLS 1.1 and 1.2 settings for Client"
-
-    $TSRegKeys = "HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.1\Client", "HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.2\Client"
-
-    ForEach ($TSRegKey in $TSRegKeys)
-    {
-
-        If (!(Test-Path -Path $TSRegKey))
-        {
-
-            New-Item -Path “$($TSRegKey.TrimEnd($TSRegKey.Split(‘\’)[-1]))” -Name “$($TSRegKey.Split(‘\’)[-1])” -Force | Out-Null
-
-        } # End If
-
-        Set-ItemProperty -Path $TSRegKey -Name 'DisabledByDefault' -Type 'Dword' -Value '0'
-       
-
-    } # End ForEach
+    # Enable TLS 1.1
+    New-Item 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.1\Server' -Force | Out-Null 
+    New-Item 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.1\Client' -Force | Out-Null 
+    New-ItemProperty -path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.1\Server' -name 'Enabled' -value '1' -PropertyType 'DWord' -Force | Out-Null 
+    New-ItemProperty -path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.1\Client' -name 'Enabled' -value '1' -PropertyType 'DWord' -Force | Out-Null 
+    New-ItemProperty -path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.1\Server' -name 'DisabledByDefault' -value '0' -PropertyType 'DWord' -Force | Out-Null 
+    New-ItemProperty -path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.1\Client' -name 'DisabledByDefault' -value '0' -PropertyType 'DWord' -Force | Out-Null 
 
 } # End Function Disable-WeakSSL
