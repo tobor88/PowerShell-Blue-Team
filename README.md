@@ -14,6 +14,15 @@ This cmdlet is meant to be run to patch the CVE-2017-8529 vulnerability on Windo
 Resolve-CVE-2017-8529 -Verbose
 ```
 
+- ### Resolve-CVE-2020-0796.ps1
+This cmdlet is meant to be run to patch the CVE-2020-0796 vulnerability on Windows version 1903 and 1909 if they are vulnerable
+```powershell
+Resolve-CVE-2020-0796 -ComputerName "DESK01", "DESK02" -Verbose
+Get-ADComputer -Filter 'Name -like "DESK*"' | Resolve-CVE-2020-0796
+# Use below command to undo changes made
+Resolve-CVE-2020-0796 -ComputerName "DESK01", "DESK02" -Undo -Verbose
+```
+
 - #### DNSZoneTransferAlert.ps1
 This script is meant to be run using task scheduler in response to DNS Server Event ID 6001. Whenever a DNS zone transfer occurs this event is set off in the event logs. Triggering this script to run will send an email to the IT Administrator or whomever you define informing them the DNS zone transfer occurred as well as the IP address that initiated it. Some Windows DNS servers may need zone transfers to be enabled in order to work correctly. This alert helps turn that into an advantage for us defenders.
 ```powershell
