@@ -135,15 +135,13 @@ Function Resolve-WindowsSpeculativeExecutionConf {
         New-ItemProperty -Path "$RegistryPath" -Name $Override -Value $OverrideValue -PropertyType 'DWORD'
 
     }  # End If
-    If ($OverrideMakValue -ne (Get-ItemProperty -Path "$RegistryPath").FeatureSettingsOverrideMask))
+    If ($OverrideMakValue -ne (Get-ItemProperty -Path "$RegistryPath").FeatureSettingsOverrideMask)
     {
 
         Write-Verbose "[*] FeatureSettingsOverride value is being changed to 3 as suggested by Microsoft`nVALUE: $OverrideMakValue"
         New-ItemProperty -Path "$RegistryPath" -Name $OverrideMask -Value $OverrideMakValue -PropertyType 'DWORD'
 
     }  # End If
-
-}  # End If
 
     If ($HyperVState -eq 'Enabled')
     {
