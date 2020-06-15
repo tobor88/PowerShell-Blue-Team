@@ -128,7 +128,7 @@ Function Resolve-WindowsSpeculativeExecutionConf {
     # CVE-2018-3639  CVE-2017-5715  CVE-2017-5754
     Write-Verbose "[*] Enabling mitigations for CVE-2018-3639 (Speculative Store Bypass), CVE-2017-5715 (Spectre Variant 2), and CVE-2017-5754 (Meltdown)"
 
-    If ($OverrideValue -ne (Get-ItemProperty -Path "$RegistryPath").FeatureSettingsOverride))
+    If ($OverrideValue -ne (Get-ItemProperty -Path "$RegistryPath").FeatureSettingsOverride)
     {
 
         Write-Verbose "[*] FeatureSettingsOverride value is being changed to 8 as suggested by Microsoft`n VALUE: $OverrideValue"
