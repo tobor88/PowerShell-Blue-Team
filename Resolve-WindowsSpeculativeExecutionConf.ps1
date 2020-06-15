@@ -163,4 +163,4 @@ Function Resolve-WindowsSpeculativeExecutionConf {
 
     }  # End If
 
-}  # End Function
+}  # End Function Resolve-WindowsSpeculativeExecutionConf
