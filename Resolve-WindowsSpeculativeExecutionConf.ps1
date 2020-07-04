@@ -128,22 +128,20 @@ Function Resolve-WindowsSpeculativeExecutionConf {
     # CVE-2018-3639  CVE-2017-5715  CVE-2017-5754
     Write-Verbose "[*] Enabling mitigations for CVE-2018-3639 (Speculative Store Bypass), CVE-2017-5715 (Spectre Variant 2), and CVE-2017-5754 (Meltdown)"
 
-    If ($OverrideValue -ne (Get-ItemProperty -Path "$RegistryPath").FeatureSettingsOverride))
+    If ($OverrideValue -ne (Get-ItemProperty -Path "$RegistryPath").FeatureSettingsOverride)
     {
 
         Write-Verbose "[*] FeatureSettingsOverride value is being changed to 8 as suggested by Microsoft`n VALUE: $OverrideValue"
         New-ItemProperty -Path "$RegistryPath" -Name $Override -Value $OverrideValue -PropertyType 'DWORD'
 
     }  # End If
-    If ($OverrideMakValue -ne (Get-ItemProperty -Path "$RegistryPath").FeatureSettingsOverrideMask))
+    If ($OverrideMakValue -ne (Get-ItemProperty -Path "$RegistryPath").FeatureSettingsOverrideMask)
     {
 
         Write-Verbose "[*] FeatureSettingsOverride value is being changed to 3 as suggested by Microsoft`nVALUE: $OverrideMakValue"
         New-ItemProperty -Path "$RegistryPath" -Name $OverrideMask -Value $OverrideMakValue -PropertyType 'DWORD'
 
     }  # End If
-
-}  # End If
 
     If ($HyperVState -eq 'Enabled')
     {
@@ -165,4 +163,4 @@ Function Resolve-WindowsSpeculativeExecutionConf {
 
     }  # End If
 
-}  # End Function
+}  # End Function Resolve-WindowsSpeculativeExecutionConf

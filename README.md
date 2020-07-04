@@ -14,6 +14,12 @@ This cmdlet is meant to be run to patch the CVE-2017-8529 vulnerability on Windo
 Resolve-CVE-2017-8529 -Verbose
 ```
 
+- #### Find-CVE-2020-0601.ps1
+This cmdlet is used for discovering evidence of compromise as a result of CVE-2020-0601
+```powershell
+Find-CVE-2020-0601 -Verbose
+```
+
 - ### Resolve-CVE-2020-0796.ps1
 This cmdlet is meant to be run to patch the CVE-2020-0796 vulnerability on Windows version 1903 and 1909 if they are vulnerable
 ```powershell
