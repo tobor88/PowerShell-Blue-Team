@@ -1,3 +1,30 @@
+# This script is used to check for users who have signed into devices that are outside their normally assigend devices
+#===========================================================================
+# REQUIREMENTS
+#===========================================================================
+# - This will require a CSV file containing a ComputerName header and Name header
+# - The script needs to be run on a domain controller logging Event ID 4624
+# --------------------------------------------------------------------------
+
+# Csv file containing the headers ComputerName and Name
+$CsvInformation = Import-Csv -Path "$env:USERPROFILE\Documents\UserComputerList.csv" -Delimiter ',' 
+$UserList = $CsvInformation | Select-Object -Property Name -Unique
+
+# Who should receive the email alerts
+$SmtpServer = 'smtp.outlook.com'
+$AlertEmail = 'alertingemail@domain.com'
+
+# Array of Shared Computer Names is for excluding computers that may be shared such as conference room computers that may be signed into
+$SharedComputerIPs = @('10.0.1.1','10.0.2.2','10.0.3.3')
+
+# Regex used for filtering event log
+[regex]$Ipv4Regex = ‘\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b’
+
+# Primary Domain Controller and DNS Server
+$PDC = ([ADSI]”LDAP://RootDSE”).dnshostname
+$FinalResult = @()
+
+
 <#
 .SYNOPSIS
     This PowerShell script is useful in an environment where users can log into any computer but are assigned maybe 1, 2, or 3+ 
@@ -36,7 +63,7 @@ Function Get-UserSid
 
     $ObjSID = $ObjUser.Translate([System.Security.Principal.SecurityIdentifier])
 
-    If (!($null -eq $ObjSID))
+    If (!($Null -eq $ObjSID))
     {
 
         $ObjSID.Value
@@ -50,69 +77,57 @@ Function Get-UserSid
     } # End Else
 
 } # End Function Get-UserSid
-$SmtpServer = 'smtp.office365.com'
-$AlertEmail = 'alertingemail@domain.com'
 
-# Array of Shared Computer Names is for excluding computers that may be shared such as conference room computers that may be signed into
-[array]$SharedComputerIPs = '10.0.1.1','10.0.2.2','10.0.3.3'
-
-# The below file needs to contain a Name column and a ComputerName column. Names can repeat as the script will still only check each name once.
-$CsvInformation = Import-Csv -Path 'C:\Users\Public\Documents\UserComputerList.csv' -Delimiter ','
-
-$UserList = $CsvInformation | Select-Object -Property 'Name' -Unique
 
 ForEach ($Assignment in $UserList)
 {
 
-    Write-Host "Getting SamAccountName and SID values..." -ForegroundColor 'Cyan'
-
-    [string]$SamAccountName = ($Assignment.Name).Replace(' ','.')
-
-    [string]$SID = Get-UserSid -SamAccountName $SamAccountName
-
-
-    Write-Host "Getting computers assigned to $SamAccountName......" -ForegroundColor 'Cyan'
-
-    $ResolveTheseCOmputerNames = $CsvInformation | Where-Object -Property 'Name' -like $Assignment.Name | Select-Object -ExpandProperty 'ComputerName'
+    Write-Host "[*] Getting SamAccountName and SID values..." -ForegroundColor 'Cyan'
+    
+    $SamAccountName = ($Assignment.Name).Replace(' ','.')
+    $SID = Get-UserSid -SamAccountName $SamAccountName
 
 
-    Write-Host "Translating computernames to Ip Addresses for searching the event logs." -ForegroundColor 'Cyan'
+    Write-Host "[*] Getting computers assigned to $SamAccountName" -ForegroundColor 'Cyan'
+    $ResolveTheseComputerNames = $CsvInformation | Where-Object -Property 'Name' -like $Assignment.Name | Select-Object -ExpandProperty 'ComputerName'
 
-    [array]$SearchIP = @()
 
+    Write-Host "[*]Translating computernames to Ip Addresses for searching the event logs." -ForegroundColor 'Cyan'
+    
+    $SearchIP = @()
     ForEach ($Device in $ResolveTheseCOmputerNames)
     {
 
-        $Ipv4Address = (Resolve-DnsName -Name $Device -ErrorAction SilentlyContinue).IPAddress
+        $Ipv4Address = (Resolve-DnsName -Name $Device -Server $PDC -Type A -ErrorAction SilentlyContinue).IPAddress
 
         If ($Ipv4Address -like "*.*.*.*")
         {
 
-            [array]$SearchIP += $Ipv4Address
+            $SearchIP += $Ipv4Address
 
         } # End If
 
     } # End ForEach
 
-    [array]$ComputerAssignments = @()
-    [array]$ComputerAssignments = $SharedComputerIPs
-    [array]$ComputerAssignments += $SearchIP
+    $ComputerAssignments = @()
+    $ComputerAssignments = $SharedComputerIPs
+    $ComputerAssignments += $SearchIP
 
 
     Write-Host "Getting log on events for $SamAccountName. Please wait..." -ForegroundColor 'Cyan'
-
-    [regex]$Ipv4Regex = ‘\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b’
 
     [array]$UserLogonEvents = @()
     # This event checks the last 24 hours (86400000)
     [array]$UserLogonEvents = Get-WinEvent -LogName "Security" -FilterXPath "*[System[EventID=4624 and TimeCreated[timediff(@SystemTime) <= 86400000]] and EventData[Data[@Name='TargetUserName']=`'$SamAccountName`']]" -ErrorAction SilentlyContinue
 
     [array]$EventLoggedInIps = @()
+    # Selects one of each IP address found that was accessed
     [array]$EventLoggedInIps = $UserLogonEvents.Message -Split "`n" | Select-String -Pattern $Ipv4Regex | Select-Object -Unique
 
     [array]$UnusualSignInIps = @()
     [array]$$ResolvedIps = @()
 
+    # Comapres the assigned computers to signed in devices
     ForEach ($EventIp in $EventLoggedInIps)
     {
 
@@ -122,24 +137,20 @@ ForEach ($Assignment in $UserList)
         {
 
             $UnusualSignInIps += ($CompareValue)
-            $ResolvedIps += (Resolve-DnsName -Name $CompareValue -ErrorAction SilentlyContinue).Name
+            $ResolvedIps += (Resolve-DnsName -Name $CompareValue -Server $PDC -ErrorAction SilentlyContinue).NameHost
 
         } # End If
 
     } # End ForEach
 
-    $Body = @()
-
     If ($UnusualSignInIps)
     {
 
-        [string]$Name = $Assignment.Name
+        $Name = $Assignment.Name
+        
+        $Obj = New-Object -TypeName PSObject -Property @{User=$SamAccountName; SID=$SID; IPv4Location="$UnusualSignInIps";Hostnames="$UnusualSignInHostname"}
+        $FinalResult += $Obj
 
-        $Body += "User                     :  $Name `n"
-        $Body += "Unusual Login Locations  :  $UnusualSignInIps `n"
-        $Body += "IP Resolved to Hostname  :  $ResolvedIps "
-
-        Send-MailMessage -From $AlertEmail -To $AlertEmail -Subject "Unusual Login Occurred" -BodyAsHtml -Body $Body -SmtpServer $SmtpServer
 
     } # End If
     Else
@@ -150,3 +161,38 @@ ForEach ($Assignment in $UserList)
     } # End Else
 
 } # End ForEach
+
+# Build Email to send final results to inform admins
+$Css = @"
+<style>
+table {
+    font-family: verdana,arial,sans-serif;
+        font-size:11px;
+        color:#333333;
+        border-width: 1px;
+        border-color: #666666;
+        border-collapse: collapse;
+}
+th {
+        border-width: 1px;
+        padding: 8px;
+        border-style: solid;
+        border-color: #666666;
+        background-color: #dedede;
+}
+td {
+        border-width: 1px;
+        padding: 8px;
+        border-style: solid;
+        border-color: #666666;
+        background-color: #ffffff;
+}
+</style>
+"@ # End CSS 
+
+$PreContent = "<Title>NOTIFICATION: Unusual Sign In: $env:COMPUTERNAME</Title>"
+$NoteLine = "This Message was Sent on $(Get-Date -Format 'MM/dd/yyyy HH:mm:ss')"
+$PostContent = "<br><p><font size='2'><i>$NoteLine</i></font>"
+$MailBody = $FinalResult | ConvertTo-Html -Head $Css -PostContent $PostContent -PreContent $PreContent -Body "<br>The below table contains information on users who have signed into devices they are not assigned in the last 24 hours<br><br><hr><br><br>" | Out-String
+
+Send-MailMessage -From $AlertEmail -To $AlertEmail -Subject "Unusual Login Occurred" -BodyAsHtml -Body "$MailBody" -SmtpServer $SmtpServer
