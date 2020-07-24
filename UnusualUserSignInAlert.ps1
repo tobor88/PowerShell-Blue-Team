@@ -59,7 +59,7 @@ Function Get-UserSid
                         )] # End Parameter
             [string[]]$SamAccountName) # End param
 
-    $ObjUser = New-Object System.Security.Principal.NTAccount($SamAccountName)
+    $ObjUser = New-Object -TypeNaem System.Security.Principal.NTAccount($SamAccountName)
 
     $ObjSID = $ObjUser.Translate([System.Security.Principal.SecurityIdentifier])
 
@@ -72,7 +72,7 @@ Function Get-UserSid
     Else
     {
 
-        Write-Warning "SID Lookup failed."
+        Write-Output "[X] SID Lookup failed."
 
     } # End Else
 
@@ -114,7 +114,7 @@ ForEach ($Assignment in $UserList)
     $ComputerAssignments += $SearchIP
 
 
-    Write-Host "Getting log on events for $SamAccountName. Please wait..." -ForegroundColor 'Cyan'
+    Write-Host "[*] Getting log on events for $SamAccountName. Please wait..." -ForegroundColor 'Cyan'
 
     [array]$UserLogonEvents = @()
     # This event checks the last 24 hours (86400000)
@@ -156,7 +156,7 @@ ForEach ($Assignment in $UserList)
     Else
     {
 
-        Write-Host "No unexpected logon events found for $SamAccountName" -ForegroundColor 'Green'
+        Write-Host "[*] No unexpected logon events found for $SamAccountName" -ForegroundColor 'Green'
 
     } # End Else
 
