@@ -1,5 +1,5 @@
 # PowerShell-Blue-Team
-Collection of PowerShell functinos and scripts a Blue Teamer might use
+Collection of PowerShell functions and scripts a Blue Teamer might use
 
 - #### Disable-WeakSSL.psm1
 This function is used for changing the registry values for RC4 and AES Ciphers as well as SSL2.0, SSL3.0, TLS1.0, TLS1.1, and TLS1.2. Enabling all of the switches will set the recommended SCAP disabled and enabled values for these for IIS 10.
@@ -9,7 +9,7 @@ PS> Disable-WeakSSL [ -WeakCiphers ] [ -StrongAES ] [ -WeakSSLandTLS ]
 ```
 
 - ### Resolve-CVE-2017-8529.ps1
-This cmdlet is meant to be run to patch the CVE-2017-8529 vulnerability on Windows computers for 64 or 32 bit architectures. This does not take any parameters other them common parmaeters.
+This cmdlet is meant to be run to patch the CVE-2017-8529 vulnerability on Windows computers for 64 or 32 bit architectures. This does not take any parameters other them common parameters.
 ```powershell
 Resolve-CVE-2017-8529 -Verbose
 ```
@@ -85,4 +85,20 @@ The default algorithm if no algorithm is defined is SHA256.
 ```powershell
 Compare-FileHash -FilePath C:\Path\To\File.exe -Hash 'e399fa5f4aa087218701aff513cc4cfda332e1fbd0d7c895df57c24cd5510be3' -Algorithm SHA256
 Compare-FileHash C:\Path\To\File.exe 'e399fa5f4aa087218701aff513cc4cfda332e1fbd0d7c895df57c24cd5510be3'
+```
+
+- #### Enable-DoH.ps1
+This cmdlet is for enabling DNS over HTTPS on a Windows machine. It can also be used to disable DNS over HTTPS on a Windows machine.
+```powershell
+# This example enables DNS over HTTPS but requires a restart to apply
+Enable-DoH
+
+# This example enables DNS over HTTPS and prompts the runner to restart
+Enable-DoH -Restart
+
+# This example disables DNS over HTTPS but requires a restart
+Enable-DoH -Undo
+
+# This example disables DNS over HTTPS and prompts the runner to restart
+Enable-DoH -Undo -Restart
 ```
