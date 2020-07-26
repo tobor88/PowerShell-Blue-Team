@@ -11,6 +11,20 @@
     If this parameter is defined the executioner will be prompted to restart the computer to fully apply the change.
 
 
+.EXAMPLE
+    -------------------------- EXAMPLE 1 --------------------------
+    C:\PS> Enable-DoH
+    This example enables DNS over HTPS on a windows machine.
+
+    -------------------------- EXAMPLE 2 --------------------------
+   C:\PS> Enable-DoH -Restart
+   This example enables DNS over HTTPS on a Windows machines and then restarts the computer after the runner confirms
+
+   -------------------------- EXAMPLE 3 --------------------------
+   C:\PS> Enable-DoH -Undo -Restart
+   This example disable DNS over HTTPS on a Windows machine and restarts the computer after the runner confirms
+
+
 .NOTES
     Author: Robert H. Osborne
     Alias: tobor
@@ -19,8 +33,10 @@
 
 .LINK
     https://github.com/tobor88
+    https://gitlab.com/tobor88
     https://www.powershellgallery.com/profiles/tobor
     https://roberthosborne.com
+    https://osbornepro.com
 
 
 .INPUTS
