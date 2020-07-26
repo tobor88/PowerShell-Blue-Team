@@ -29,6 +29,12 @@ Get-ADComputer -Filter 'Name -like "DESK*"' | Resolve-CVE-2020-0796
 Resolve-CVE-2020-0796 -ComputerName "DESK01", "DESK02" -Undo -Verbose
 ```
 
+- ### Resolve-CVE-2020-1350.ps1
+This cmdlet is meant to mitigate CVE-2020-1350 using a registry setting in cases that prevent a server from being restarted with the newest patch KB4569509.
+```powershell
+Resolve-CVE-2020-1350
+```
+
 - #### DNSZoneTransferAlert.ps1
 This script is meant to be run using task scheduler in response to DNS Server Event ID 6001. Whenever a DNS zone transfer occurs this event is set off in the event logs. Triggering this script to run will send an email to the IT Administrator or whomever you define informing them the DNS zone transfer occurred as well as the IP address that initiated it. Some Windows DNS servers may need zone transfers to be enabled in order to work correctly. This alert helps turn that into an advantage for us defenders.
 ```powershell
