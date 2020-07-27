@@ -93,13 +93,12 @@ ForEach ($Assignment in $UserList)
 
 
     Write-Host "[*]Translating computernames to Ip Addresses for searching the event logs." -ForegroundColor 'Cyan'
-    
     $SearchIP = @()
     ForEach ($Device in $ResolveTheseCOmputerNames)
     {
 
         $Ipv4Address = (Resolve-DnsName -Name $Device -Server $PDC -Type A -ErrorAction SilentlyContinue).IPAddress
-
+        
         If ($Ipv4Address -like "*.*.*.*")
         {
 
@@ -110,9 +109,7 @@ ForEach ($Assignment in $UserList)
     } # End ForEach
 
     $ComputerAssignments = @()
-    $ComputerAssignments = $SharedComputerIPs
-    $ComputerAssignments += $SearchIP
-
+    $ComputerAssignments = $SharedComputerIPs + $SearchIP
 
     Write-Host "[*] Getting log on events for $SamAccountName. Please wait..." -ForegroundColor 'Cyan'
 
