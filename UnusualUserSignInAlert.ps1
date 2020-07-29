@@ -86,10 +86,10 @@ ForEach ($Assignment in $UserList)
     
     $SamAccountName = ($Assignment.Name).Replace(' ','.')
     $SID = Get-UserSid -SamAccountName $SamAccountName
-
+    $Name = $Assignment.Name
 
     Write-Host "[*] Getting computers assigned to $SamAccountName" -ForegroundColor 'Cyan'
-    $ResolveTheseComputerNames = $CsvInformation | Where-Object -Property 'Name' -like $Assignment.Name | Select-Object -ExpandProperty 'ComputerName'
+    $ResolveTheseComputerNames = $CsvInformation | Where-Object -Property 'Name' -like $Name | Select-Object -ExpandProperty 'ComputerName'
 
 
     Write-Host "[*]Translating computernames to Ip Addresses for searching the event logs." -ForegroundColor 'Cyan'
@@ -130,8 +130,8 @@ ForEach ($Assignment in $UserList)
 
         $CompareValue = ($EventIp | Out-String).Replace('Source Network Address:	','').Trim()
 
-        If ($CompareValue -notin $ComputerAssignments)
-        {
+        If (($ComputerAssignments -NotContains $CompareValue) -and ($CompareValue -notlike "10.10.10..*") -or ($ResolveTheseCOmputerNames -NotContains ((Resolve-DnsName -Name $CompareValue -Server $env:COMPUTERNAME -DnssecOk).NameHost).Replace("$env:USERDNSDOMAIN","")))
+        { 
 
             $UnusualSignInIps += ($CompareValue)
             $ResolvedIps += (Resolve-DnsName -Name $CompareValue -Server $PDC -ErrorAction SilentlyContinue).NameHost
@@ -143,11 +143,8 @@ ForEach ($Assignment in $UserList)
     If ($UnusualSignInIps)
     {
 
-        $Name = $Assignment.Name
-        
         $Obj = New-Object -TypeName PSObject -Property @{User=$SamAccountName; SID=$SID; IPv4Location="$UnusualSignInIps";Hostnames="$UnusualSignInHostname"}
         $FinalResult += $Obj
-
 
     } # End If
     Else
