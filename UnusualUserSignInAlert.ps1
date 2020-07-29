@@ -99,7 +99,7 @@ ForEach ($Assignment in $UserList)
 
         $Ipv4Address = (Resolve-DnsName -Name $Device -Server $PDC -Type A -ErrorAction SilentlyContinue).IPAddress
         
-        If ($Ipv4Address -like "*.*.*.*")
+        If ($Ipv4Address)
         {
 
             $SearchIP += $Ipv4Address
@@ -125,18 +125,31 @@ ForEach ($Assignment in $UserList)
     [array]$$ResolvedIps = @()
 
     # Comapres the assigned computers to signed in devices
-    ForEach ($EventIp in $EventLoggedInIps)
-    {
-
+     ForEach ($EventIp in $EventLoggedInIps) 
+    { 
+        
         $CompareValue = ($EventIp | Out-String).Replace('Source Network Address:	','').Trim()
 
-        If (($ComputerAssignments -NotContains $CompareValue) -and ($CompareValue -notlike "10.10.10..*") -or ($ResolveTheseCOmputerNames -NotContains ((Resolve-DnsName -Name $CompareValue -Server $env:COMPUTERNAME -DnssecOk).NameHost).Replace("$env:USERDNSDOMAIN","")))
+        $DnsCheck = ((Resolve-DnsName -Name $CompareValue -Server "$env:COMPUTERNAME.$env:USERDNSDOMAIN" -DnssecOk -ErrorAction SilentlyContinue).NameHost).Replace("$env:USERDNSDOMAIN","")
+
+        If (($ComputerAssignments -notcontains $CompareValue) -and ($CompareValue -notlike "10.10.10.*")) # 10.10.10..* Can be a subnet a VPN provider manages
         { 
 
             $UnusualSignInIps += ($CompareValue)
-            $ResolvedIps += (Resolve-DnsName -Name $CompareValue -Server $PDC -ErrorAction SilentlyContinue).NameHost
+            $UnusualSignInHostname += (Resolve-DnsName -Name $CompareValue -Server "$env:COMPUTERNAME.$env:USERDNSDOMAIN" -DnssecOk -ErrorAction SilentlyContinue).NameHost
+
+            If (($DnsCheck) -and ($ResolveTheseComputerNames -contains $DnsCheck))
+            {
+
+                Write-Output "[*] Computername resolved to an IP address that differed from the DNS entry. This is possible with varying ethernet, wifi, vpn ip assignments."
+                $UnusualSignInIps.Remove($CompareValue)
+                $UnusualSignInHostname.Remove($DnsCheck)
+            
+            }  # End If
 
         } # End If
+
+       Remove-Variable -Name CompareValue,DnsCheck
 
     } # End ForEach
 
