@@ -130,26 +130,33 @@ ForEach ($Assignment in $UserList)
         
         $CompareValue = ($EventIp | Out-String).Replace('Source Network Address:	','').Trim()
 
-        $DnsCheck = ((Resolve-DnsName -Name $CompareValue -Server "$env:COMPUTERNAME.$env:USERDNSDOMAIN" -DnssecOk -ErrorAction SilentlyContinue).NameHost).Replace("$env:USERDNSDOMAIN","")
+        Try 
+        {
 
-        If (($ComputerAssignments -notcontains $CompareValue) -and ($CompareValue -notlike "10.10.10.*")) # 10.10.10..* Can be a subnet a VPN provider manages
+            $DnsCheck = ((Resolve-DnsName -Name $CompareValue -Server "$env:COMPUTERNAME.usav.org" -DnssecOk -ErrorAction SilentlyContinue).NameHost).Replace(".usav.org","")
+
+            If ($ResolveTheseComputerNames -contains $DnsCheck)
+            {
+       
+                $ComputerAssignments += ($CompareValue) 
+
+            }  # End If
+
+        }  # End Try
+        Catch
+        {
+
+            Write-Host "[*] Could not resolve $CompareValue to an hostname" -ForegroundColor Cyan   
+
+        }  # End Catch
+
+        If (($ComputerAssignments -notcontains $CompareValue) -and ($CompareValue -notlike "10.10.10.*")) # 10.10.10.* can be used to exclude VPN subnets or whatever
         { 
 
             $UnusualSignInIps += ($CompareValue)
-            $UnusualSignInHostname += (Resolve-DnsName -Name $CompareValue -Server "$env:COMPUTERNAME.$env:USERDNSDOMAIN" -DnssecOk -ErrorAction SilentlyContinue).NameHost
-
-            If (($DnsCheck) -and ($ResolveTheseComputerNames -contains $DnsCheck))
-            {
-
-                Write-Output "[*] Computername resolved to an IP address that differed from the DNS entry. This is possible with varying ethernet, wifi, vpn ip assignments."
-                $UnusualSignInIps.Remove($CompareValue)
-                $UnusualSignInHostname.Remove($DnsCheck)
-            
-            }  # End If
+            $UnusualSignInHostname += ((Resolve-DnsName -Name $CompareValue -Server "$env:COMPUTERNAME.usav.org" -DnssecOk -ErrorAction SilentlyContinue).NameHost).Replace(".usav.org","")
 
         } # End If
-
-       Remove-Variable -Name CompareValue,DnsCheck
 
     } # End ForEach
 
