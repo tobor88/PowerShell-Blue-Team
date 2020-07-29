@@ -121,8 +121,8 @@ ForEach ($Assignment in $UserList)
     # Selects one of each IP address found that was accessed
     [array]$EventLoggedInIps = $UserLogonEvents.Message -Split "`n" | Select-String -Pattern $Ipv4Regex | Select-Object -Unique
 
-    [array]$UnusualSignInIps = @()
-    [array]$$ResolvedIps = @()
+    [System.Collections.ArrayList]$UnusualSignInIps = @()
+    [System.Collections.ArrayList]$UnusualSignInHostname = @()
 
     # Comapres the assigned computers to signed in devices
      ForEach ($EventIp in $EventLoggedInIps) 
