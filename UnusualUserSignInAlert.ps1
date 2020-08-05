@@ -187,7 +187,7 @@ ForEach ($Assignment in $UserList)
             If ($ResolveTheseComputerNames -notcontains $SingleHost.Hostname.Replace("$env:USERDNSDOMAIN",""))
             { 
 
-                $UnusualSignInIps += $SingleHost.IPAddress.IPAddressToString
+                $UnusualSignInIps += $SingleHost.IPAddress
                 $UnusualSignInHostname += $SingleHost.Hostname.Replace("$env:USERDNSDOMAIN","") 
 
             }  # End If   
