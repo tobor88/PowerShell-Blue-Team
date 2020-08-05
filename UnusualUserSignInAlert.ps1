@@ -150,7 +150,7 @@ ForEach ($Assignment in $UserList)
                 }
         }  # End Switch
         
-        If ($Null -eq $DhcpResolvedHost)
+        If ($Null -eq $SingleHost)
         {
             Try 
             {
