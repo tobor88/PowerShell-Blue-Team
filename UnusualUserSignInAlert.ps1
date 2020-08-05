@@ -129,34 +129,70 @@ ForEach ($Assignment in $UserList)
     { 
         
         $CompareValue = ($EventIp | Out-String).Replace('Source Network Address:	','').Trim()
-
-        Try 
+        
+        # BELOW SWITCH OPTIONS SHOULD BE SET TO MATCH SUBNETS IN YOUR ENVIRONMENT THAT ARE ON WIFI OR VPN THAT CHANGE ##############################################################
+        Switch ($CompareValue)
         {
-
-            $DnsCheck = ((Resolve-DnsName -Name $CompareValue -Server "$env:COMPUTERNAME.usav.org" -DnssecOk -ErrorAction SilentlyContinue).NameHost).Replace(".usav.org","")
-
-            If ($ResolveTheseComputerNames -contains $DnsCheck)
+            "10.0.0.*" {
+                    $DhcpResolvedHost = Invoke-Command -HideComputerName "DHCPserver01.$env:USERDNSDOMAIN" -ScriptBlock {Get-DhcpServerv4Lease -ComputerName localhost -ScopeID '10.0.0.0'}; $SingleHost = $DhcpResolvedHost.Where({[IPAddress]$_.Ipaddress -like $CompareValue})
+                }
+            "10.1.0.*" {
+                    $DhcpResolvedHost = Invoke-Command -HideComputerName "DHCPserver02.$env:USERDNSDOMAIN" -ScriptBlock {Get-DhcpServerv4Lease -ComputerName localhost -ScopeID '10.1.0.0'};; $SingleHost = $DhcpResolvedHost.Where({[IPAddress]$_.Ipaddress -like $CompareValue})
+                }
+            "10.2.0.*" {
+                    $DhcpResolvedHost = Invoke-Command -HideComputerName "Dhcpserver03.$env:USERDNSDOMAIN" -ScriptBlock {Get-DhcpServerv4Lease -ComputerName localhost -IPAddress -ScopeID '10.2.0.0'}; $SingleHost = $DhcpResolvedHost.Where({[IPAddress]$_.Ipaddress -like $CompareValue})
+                }
+            "10.3.0.*"  {
+                    $DhcpResolvedHost = Invoke-Command -HideComputerName "Dhcpserver04.$env:USERDNSDOMAIN" -ScriptBlock {Get-DhcpServerv4Lease -ComputerName localhost -ScopeID '10.3.0.0'}; $SingleHost = $DhcpResolvedHost.Where({[IPAddress]$_.Ipaddress -like $CompareValue})
+                }
+            Default {
+                    Remove-Variable -Name DhcpResolvedHost -ErrorAction SilentlyContinue
+                }
+        }  # End Switch
+        
+        If ($Null -eq $DhcpResolvedHost)
+        {
+            Try 
             {
+
+                $DnsCheck = ((Resolve-DnsName -Name $CompareValue -Server "$env:COMPUTERNAME.usav.org" -DnssecOk -ErrorAction SilentlyContinue).NameHost).Replace(".usav.org","")
+
+                If ($ResolveTheseComputerNames -contains $DnsCheck)
+                {
        
-                $ComputerAssignments += ($CompareValue) 
+                    $ComputerAssignments += ($CompareValue) 
 
-            }  # End If
+                }  # End If
 
-        }  # End Try
-        Catch
+            }  # End Try
+            Catch
+            {
+
+                Write-Host "[*] Could not resolve $CompareValue to an hostname" -ForegroundColor Cyan   
+
+            }  # End Catch
+
+            If (($ComputerAssignments -notcontains $CompareValue) -and ($CompareValue -notlike "10.10.10.*")) # 10.10.10.* can be used to exclude VPN subnets or whatever
+            { 
+
+                $UnusualSignInIps += ($CompareValue)
+                $UnusualSignInHostname += ((Resolve-DnsName -Name $CompareValue -Server "$env:COMPUTERNAME.usav.org" -DnssecOk -ErrorAction SilentlyContinue).NameHost).Replace(".usav.org","")
+
+            } # End If
+            
+        }  # End If
+        Else
         {
+        
+            If ($ResolveTheseComputerNames -notcontains $SingleHost.Hostname.Replace("$env:USERDNSDOMAIN",""))
+            { 
 
-            Write-Host "[*] Could not resolve $CompareValue to an hostname" -ForegroundColor Cyan   
+                $UnusualSignInIps += $SingleHost.IPAddress.IPAddressToString
+                $UnusualSignInHostname += $SingleHost.Hostname.Replace("$env:USERDNSDOMAIN","") 
 
-        }  # End Catch
-
-        If (($ComputerAssignments -notcontains $CompareValue) -and ($CompareValue -notlike "10.10.10.*")) # 10.10.10.* can be used to exclude VPN subnets or whatever
-        { 
-
-            $UnusualSignInIps += ($CompareValue)
-            $UnusualSignInHostname += ((Resolve-DnsName -Name $CompareValue -Server "$env:COMPUTERNAME.usav.org" -DnssecOk -ErrorAction SilentlyContinue).NameHost).Replace(".usav.org","")
-
-        } # End If
+            }  # End If   
+            
+        }  # End Else
 
     } # End ForEach
 
