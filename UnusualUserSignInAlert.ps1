@@ -131,7 +131,7 @@ ForEach ($Assignment in $UserList)
         $CompareValue = ($EventIp | Out-String).Replace('Source Network Address:	','').Trim()
         
         # BELOW SWITCH OPTIONS SHOULD BE SET TO MATCH SUBNETS IN YOUR ENVIRONMENT THAT ARE ON WIFI OR VPN THAT CHANGE ##############################################################
-        Switch ($CompareValue)
+        Switch -Wildcard ($CompareValue)
         {
             "10.0.0.*" {
                     $DhcpResolvedHost = Invoke-Command -HideComputerName "DHCPserver01.$env:USERDNSDOMAIN" -ScriptBlock {Get-DhcpServerv4Lease -ComputerName localhost -ScopeID '10.0.0.0'}; $SingleHost = $DhcpResolvedHost.Where({[IPAddress]$_.Ipaddress -like $CompareValue})
