@@ -193,7 +193,9 @@ ForEach ($Assignment in $UserList)
             }  # End If   
             
         }  # End Else
-
+    
+        Remove-Variable -Name SingleHost,DhcpResolvedHost
+        
     } # End ForEach
 
     If ($UnusualSignInIps)
