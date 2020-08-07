@@ -17,6 +17,11 @@
 .EXAMPLE
     -------------------------- EXAMPLE 1 --------------------------
     PS> Remove-PowerShellV2
+    This example removes PowerShell version 2 if it is installed on the local machine
+
+    -------------------------- EXAMPLE 2 --------------------------
+    PS> Remove-PowerShellV2 -ComputerName DC01,Desktop20
+    This example removes PowerShell version 2 from the remote devices DC01 and Desktop20
 
 
 .NOTES
@@ -43,50 +48,106 @@
 #>
 Function Remove-PowerShellV2 {
     [CmdletBinding()]
-        param()
+        param(
+            [Parameter(
+                Mandatory=$False,
+                Position=0,
+                ValueFromPipeline=$True,
+                ValueFromPipelineByPropertyName=$True)]  # End Parameter
+            [Alias('cn','Computer')]
+            [ValidateNotNullOrEmpty()]
+            [String[]]$ComputerName
+        )  # End param
 
-    Write-Verbose "[*] Checking whether or not PowerShell version 2 is installed on the host"
-    $State = (Get-WindowsOptionalFeature -Online -FeatureName MicrosoftWindowsPowerShellV2).State
+Switch ($PSBoundParameters.Keys) {
+    'ComputerName' {
 
-    Switch ($State)
-    {
+        ForEach ($C in $ComputerName)
+        {
 
-        "Enabled" {
+            $SessionOption = New-PSSessionOption -SkipCACheck -SkipCNCheck -SkipRevocationCheck
+            # This option to an attempt to accomdate any environment and should not be needed if WinRM over HTTPS is configured correctly
 
-            Write-Output "[!] This device is found vulnerable to a PowerShell downgrade attack"
+            Invoke-Command -HideComputerName "$C.$env:USERDNSDOMAIN" -UseSSL -SessionOption $SessionOption -ScriptBlock {
 
-            Write-Output "[*] Removing PowerShell Version 2 to remediate PowerShell Downgrade Attack vulnerability"
+                Write-Verbose "[*] Checking whether or not PowerShell version 2 is installed on the $env:COMPUTERNAME"
+                $State = (Get-WindowsOptionalFeature -Online -FeatureName MicrosoftWindowsPowerShellV2).State
 
-            Try
-            {
-
-                Disable-WindowsOptionalFeature -Online -FeatureName MicrosoftWindowsPowerShellV2Root -ErrorVariable $Issue
-
-            }  # End Try
-            Catch
-            {
-
-                Write-Output "[x] ERROR: Unable to uninstall PowerShell version 2."
-                $Issue
-
-                If ($Issue)
+                Switch ($State)
                 {
 
-                    Write-Output "[!] Attempting to use DISM for removal"
-                    cmd /c C:\Windows\System32\Dism.exe /online /Disable-Feature /FeatureName:"MicrosoftWindowsPowerShellV2Root"
+                    "Enabled" {
 
-                }  # End If
+                        Write-Output "[!] $env:COMPUTERNAME is vulnerable to a PowerShell downgrade attack"
+                        Write-Output "[*] Removing PowerShell Version 2 to remediate PowerShell Downgrade Attack vulnerability"
 
-            }  # End Catch
+                        Try
+                        {
 
-        }  # End Enabled Switch
+                            Disable-WindowsOptionalFeature -Online -FeatureName MicrosoftWindowsPowerShellV2Root -Remove
 
-        "Disabled" {
+                        }  # End Try
+                        Catch
+                        {
 
-            Write-Output "[*] SAFE: PowerShell version 2 is not installed on this device"
+                            Write-Output "[*] SAFE: PowerShell version 2 is not installed on $env:COMPUTERNAME"
 
-        }  # End Disabled Switch
+                        }  # End Catch
 
-    }  # End Switch
+                    }  # End Enabled Switch
+
+                    "Disabled" {
+
+                        Write-Output "[*] SAFE: PowerShell version 2 is not installed on $env:COMPUTERNAME"
+
+                    }  # End Disabled Switch
+
+                }  # End Switch
+
+            }  # End Invoke-Command
+
+        }  # End ForEach
+
+    }  # End ComputerName Switch
+
+    Default {
+
+        Write-Verbose "[*] Checking whether or not PowerShell version 2 is installed on the host"
+        $State = (Get-WindowsOptionalFeature -Online -FeatureName MicrosoftWindowsPowerShellV2).State
+
+        Switch ($State)
+        {
+
+            "Enabled" {
+
+                Write-Output "[!] $env:COMPUTERNAME is vulnerable to a PowerShell downgrade attack"
+                Write-Output "[*] Removing PowerShell Version 2 to remediate PowerShell Downgrade Attack vulnerability"
+
+                Try
+                {
+
+                    Disable-WindowsOptionalFeature -Online -FeatureName MicrosoftWindowsPowerShellV2Root -Remove
+
+                }  # End Try
+                Catch
+                {
+
+                    Write-Output "[*] SAFE: PowerShell version 2 is not installed on $env:COMPUTERNAME"
+
+                }  # End Catch
+
+            }  # End Enabled Switch
+
+            "Disabled" {
+
+                Write-Output "[*] SAFE: PowerShell version 2 is not installed on $env:COMPUTERNAME"
+
+            }  # End Disabled Switch
+
+        }  # End Switch
+
+    }  # End Default Switch
+
+}  # End Switch
 
 }  # End Function Remove-PowerShellV2
