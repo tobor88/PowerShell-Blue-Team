@@ -69,11 +69,11 @@
     Contact: rosborne@osbornepro.com
 
 
-.INPUT
+.INPUTS
     None
 
 
-.OUTPUT
+.OUTPUTS
     None
 
 
