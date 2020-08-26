@@ -36,13 +36,32 @@
 
 .EXAMPLE
     -------------------------- EXAMPLE 1 --------------------------
-    Remove-SpamEmail
-    This examples 
+    Remove-SpamEmail -ContentMatchQuery '(Received:4/13/2020..4/14/2020) AND (Subject:`"Action required`")'
+    Remove-SpamEmail -ExchangeOnline -ContentMatchQuery '(Received:4/13/2020..4/14/2020) AND (Subject:`"Action required`")'
+    
+    The above two commands do the same thing. They find every email received from April 13-14 2020 with the Subject 
+    "Action Required" and then removes it from everyones inbox on the Exchange Server. The -ExchangeOnline parameter 
+    is the default parameter set name and does not need to be specified. It signifies that your Exchange Server is 
+    not on site and managed by Microsoft.
+    
 
     -------------------------- EXAMPLE 2 --------------------------
-    Remove-SpamEmail -OnPremise -ConnectionUri 
-    This examples 
+    Remove-SpamEmail -OnPremise -ContentMatchQuery '(Received:4/13/2020) AND (Subject:`"Action required`")' -ConnectionUri "https://exchangeserver.domain.com/Powershell"
+  
+    This example finds every email received from April 13 2020 with the Subject Action Required and removes it from every ones inbox.
+    The OnPremise parameter specifies that your Exchange server is managed on site. As such the -ConnectionUri parameter will also need 
+    to be defined containing a link to your Exchange Server. This has not been tested so if you experience issues with this please inform me
+    what they are.
 
+    -------------------------- EXAMPLE 3 --------------------------
+    Remove-SpamEmail -MFA -OnPremise -ContentMatchQuery '(Received:4/13/2020) AND (Subject:`"Action required`")' -ConnectionUri "https://exchangeserver.domain.com/Powershell"
+  
+    This example finds every email received from April 13 2020 with the Subject Action Required and removes it from every ones inbox.
+    The -MFA parameter is to be used when your environment is using Multi Factor Authenticaiton. This gets used in the cmdlet New-PsSession.
+    The OnPremise parameter specifies that your Exchange server is managed on site. As such the -ConnectionUri parameter will also need 
+    to be defined containing a link to your Exchange Server. On-Prem has not been tested so if you experience issues with this please inform me
+    what they are.
+    
 
 .NOTES
     Author: Robert H. Osborne
@@ -95,7 +114,7 @@ Function Remove-SpamEmail {
 
             [Parameter(
                 ParameterSetName="On-Premise")]  # End Parameter
-            [Switch]$OnPremise,
+            [Switch][Bool]$OnPremise,
 
             [Parameter(
                 ParameterSetName="ExchangeOnline")]
@@ -168,7 +187,7 @@ PROCESS
 
    
     Write-Verbose "Deleting the inbox messages discovered in the previous search results from mailboxes where the spam email exists."
-    New-ComplianceSearchAction -SearchName "Remove Phishing Message" -Purge -PurgeType SoftDelete
+    New-ComplianceSearchAction -SearchName "$Date Remove Phishing Message" -Purge -PurgeType SoftDelete
 
 }  # End PROCESS
 END
