@@ -9,6 +9,9 @@ These will be optional ports that the firewall will keep open. If this is not de
 .PARAMETER LogFile
 Defines the directory location and the file name of the firewall logs (that will be examined) should be saved too. The default value is the CIS Benchmark recommended location which is C:\Windows\System32\logfiles\firewall\pfirewall.log. The file name of course can be whatever you want.
 
+.PARAMETER ExcludeAddresses
+This parameter allows you to define allowed port scanners. This value can be set to a single value or an array of IPv4 addresses. Separate values with a comma. This is here for use during penetration testing engagements as well as for vulnerability scanners such as Nessus. If you are excluding the server address of your vulnerability scanner or admin machine I would recommend you have IP Routing Disabled. Check this setting using the command ```ipconfig /all```
+
 .PARAMETER Limit
 Defines the number of unsolicited packets that should indicate a port scan is occuring. The default detection value is 5 unsolicited packets.
 
@@ -36,8 +39,8 @@ Watch-PortScan -OpenPorts 80,443,445 -LogFile C:\Windows\System32\logfiles\firew
 # This example gets a list of currently listening ports on the device and leaves them open while blocking all other ports. The alert limit is set to 6 consecutive unsolicited packets and any discovered port scanning IP addresses are added to the firewalls blocklist.
 
 .EXAMPLE
-Watch-PortScan -EmailAlert
-# This example gets a list of currently listening ports on the device and leaves them open while blocking all other ports. The alert limit is set to 5 consecutive unsolicited packets and the logs are saved to C:\Windows\System32\logfiles\firewall\pfirewall.log. This will also send an email alert to the email you specify. The file defined in $PreservationLocation will be attached to the email for the admin to review.
+Watch-PortScan -EmailAlert -ExcludeAddresses '10.10.10.10.', '10.10.10.11'
+# This example gets a list of currently listening ports on the device and leaves them open while blocking all other ports. The alert limit is set to 5 consecutive unsolicited packets and the logs are saved to C:\Windows\System32\logfiles\firewall\pfirewall.log. This will also send an email alert to the email you specify. The file defined in $PreservationLocation will be attached to the email for the admin to review. This also excludes IP addresses 10.10.10.10. and 10.10.10.11 from being detected as port scanners.
 
 
 .NOTES
@@ -83,6 +86,12 @@ Function Watch-PortScan {
                 HelpMessage="`n[H] Set the absolute path and filename location to save firewall logs using the file extension .log`n[E] Example: C:\Windows\System32\logfiles\firewall\pfirewall.log")]  # End Parameter
             [ValidateScript({$LogFile -like "*.log"})]
             [System.IO.File]$LogFile = "C:\Windows\System32\logfiles\firewall\pfirewall.log",
+
+            [Parameter(
+                Mandatory=$False,
+                ValueFromPipeline=$False)]  # End Parameter
+            [ValidatePattern("\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}")]
+            [String]$ExcludeAddresses,
 
             [Parameter(
                 Mandatory=$False,
@@ -185,7 +194,19 @@ Function Watch-PortScan {
     }  # End Else
 
     $ScanCounter = 0
-    $IPs= [System.Net.Dns]::GetHostAddresses("$env:COMPUTERNAME").Where({$_.AddressFamily -eq 'InterNetwork'}).IpAddressToString
+    $IPs = [System.Net.Dns]::GetHostAddresses("$env:COMPUTERNAME").Where({$_.AddressFamily -eq 'InterNetwork'}).IpAddressToString
+    If ($ExcludeAddresses)
+    {
+
+        $IPs += $ExcludeAddresses
+
+    }  # End If
+    Else 
+    {
+     
+        Write-Verbose "No extra IPv4 addresses will be excluded from scanner results."
+        
+    }
     $DnsServers = Get-CimInstance -ClassName "Win32_NetworkAdapterConfiguration" | ForEach-Object -MemberName "DNSServerSearchOrder"
     $ScanFound = $False
     $BlockIps = @()
