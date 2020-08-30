@@ -1,6 +1,23 @@
 # PowerShell-Blue-Team
 Collection of PowerShell functions and scripts a Blue Teamer might use
 
+- #### Watch-PortScan.ps1
+This cmdlet is used to discover attemtped port scans on a device. It runs on an infinite loop. This cmdlet can be used to send an email alert containing the log information, it can automatically added a source IP addresses accused of port scanning to the Windows Firewall on a block list. The default uninitiated connection limit that sets off the alert is 5. This means that when 5 connections are made to ports that are not opened and where no request was initiated, a firewall rule is created blocking Inbound and Outbound connections to the source IP. Although you do not need to manually define your open ports on the server it is a good idea too in order to ensure you are allowing all the open ports you would like. This cmdlet is dependent on firewall logging and requires looking at denied requests as this is not a packet inspector. You can also exclude IP addresses to prevent legitimate port scanners from vulnerability scanning servers from being blocked by this funciton.
+```powershell
+PS> Watch-PortScan -OpenPorts 80,443,445 -LogFile C:\Windows\System32\logfiles\firewall\pfirewall.log -Limit 10 -ActiveBlockList -ExcludeAddresses '10.10.10.10', '10.10.10.11' -EmailAlert
+# The above example leaves ports 80, 443, and 445 open and blocks all others. It then logs the firewall logs to the location I defined. The detection limit is set to 10 so when 10 uninitated connections occur from the same IP address an alert is triggered. The Block List is set to active which means that any discovered port scanners, excluding IP addresses 10.10.10.10 and 10.10.10.11 will have a firewall rule added, blocking inbound and outbound connections to the IP. The -EmailAlert parameter will send an email alert using the info you provide. Rather than make 50 parameters you are expected to define your email information in the script on lines 112-114. You will then receive an email alert with a small log file attached contatining information on the port scan event. 
+
+# Every parameter does not need to be defined. You can do everything with as little as this
+PS> Watch-PortScan -EmailAlert -ActiveBlockList -ExcludeAddresses '10.10.10.10.', '10.10.10.11'
+
+PS> Watch-PortScan -OpenPorts 80,443
+# This example opens ports 80 and 443 and blocks all other ports. The logs that will be examined are going to be saved to C:\Windows\System32\logfiles\firewall\pfirewall.log. The alert limit is going to be set to 5. Discovered port scanner IP addresses will not be added to the firewall rule block list. No email alert will be sent and no extra IP adresses exclude from the results.
+
+# You are also able to pipe port values to this cmdlet
+$OpenPorts = (Get-NetTcpConnection -State Listen).LocalPort
+$OpenPorts | Watch-PortScan -EmailAlert
+```
+
 - #### Disable-WeakSSL.psm1
 This function is used for changing the registry values for RC4 and AES Ciphers as well as SSL2.0, SSL3.0, TLS1.0, TLS1.1, and TLS1.2. Enabling all of the switches will set the recommended SCAP disabled and enabled values for these for IIS 10.
 REFERENCE [CIS Benchmarks](https://workbench.cisecurity.org/benchmarks)
@@ -11,28 +28,28 @@ PS> Disable-WeakSSL [ -WeakCiphers ] [ -StrongAES ] [ -WeakSSLandTLS ]
 - ### Resolve-CVE-2017-8529.ps1
 This cmdlet is meant to be run to patch the CVE-2017-8529 vulnerability on Windows computers for 64 or 32 bit architectures. This does not take any parameters other them common parameters.
 ```powershell
-Resolve-CVE-2017-8529 -Verbose
+PS> Resolve-CVE-2017-8529 -Verbose
 ```
 
 - #### Find-CVE-2020-0601.ps1
 This cmdlet is used for discovering evidence of compromise as a result of CVE-2020-0601
 ```powershell
-Find-CVE-2020-0601 -Verbose
+PS> Find-CVE-2020-0601 -Verbose
 ```
 
 - ### Resolve-CVE-2020-0796.ps1
 This cmdlet is meant to be run to patch the CVE-2020-0796 vulnerability on Windows version 1903 and 1909 if they are vulnerable
 ```powershell
-Resolve-CVE-2020-0796 -ComputerName "DESK01", "DESK02" -Verbose
-Get-ADComputer -Filter 'Name -like "DESK*"' | Resolve-CVE-2020-0796
+PS> Resolve-CVE-2020-0796 -ComputerName "DESK01", "DESK02" -Verbose
+PS> Get-ADComputer -Filter 'Name -like "DESK*"' | Resolve-CVE-2020-0796
 # Use below command to undo changes made
-Resolve-CVE-2020-0796 -ComputerName "DESK01", "DESK02" -Undo -Verbose
+PS> Resolve-CVE-2020-0796 -ComputerName "DESK01", "DESK02" -Undo -Verbose
 ```
 
 - ### Resolve-CVE-2020-1350.ps1
 This cmdlet is meant to mitigate CVE-2020-1350 using a registry setting in cases that prevent a server from being restarted with the newest patch KB4569509.
 ```powershell
-Resolve-CVE-2020-1350
+PS> Resolve-CVE-2020-1350
 ```
 
 - #### DNSZoneTransferAlert.ps1
@@ -91,14 +108,14 @@ Compare-FileHash C:\Path\To\File.exe 'e399fa5f4aa087218701aff513cc4cfda332e1fbd0
 This cmdlet is for enabling DNS over HTTPS on a Windows machine. It can also be used to disable DNS over HTTPS on a Windows machine.
 ```powershell
 # This example enables DNS over HTTPS but requires a restart to apply
-Enable-DoH
+PS> Enable-DoH
 
 # This example enables DNS over HTTPS and prompts the runner to restart
-Enable-DoH -Restart
+PS> Enable-DoH -Restart
 
 # This example disables DNS over HTTPS but requires a restart
-Enable-DoH -Undo
+PS> Enable-DoH -Undo
 
 # This example disables DNS over HTTPS and prompts the runner to restart
-Enable-DoH -Undo -Restart
+PS> Enable-DoH -Undo -Restart
 ```
