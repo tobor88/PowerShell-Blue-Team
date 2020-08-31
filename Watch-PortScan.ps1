@@ -72,7 +72,7 @@ Function Watch-PortScan {
     [CmdletBinding()]
         param (
             [Parameter(
-                Madatory=$False,
+                Mandatory=$False,
                 ValueFromPipeline=$True,
                 ValueFromPipelineByPropertyName=$True)]  # End Parameter
             [ValidateNotNullOrEmpty()]
