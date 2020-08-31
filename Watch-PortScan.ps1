@@ -76,7 +76,7 @@ Function Watch-PortScan {
                 ValueFromPipeline=$True,
                 ValueFromPipelineByPropertyName=$True)]  # End Parameter
             [ValidateNotNullOrEmpty()]
-            [String[]]$OpenPorts = ((Get-NetTcpConnection -State Listen).LocalPort | Select-Object -Unique),
+            [String[]]$OpenPorts = ((Get-NetTcpConnection -State Listen,Established,FinWait1,FinWait2,Bound,CloseWait,Closing -ErrorAction SilentlyContinue).LocalPort | Select-Object -Unique),
 
             [Parameter(
                 Mandatory=$False,
@@ -92,7 +92,6 @@ Function Watch-PortScan {
             [Parameter(
                 Mandatory=$False,
                 ValueFromPipeline=$False)]  # End Parameter
-            [ValidateCount(1)]
             [Int32]$Limit = 5,
 
             [Parameter(
@@ -137,8 +136,8 @@ Function Watch-PortScan {
     {
 
         Write-Verbose "Setting log file locations"
-        $FileName =  $LogName.Split('\') | Select-Object -Index (($LogName.Split('\').Count) - 1)
-        $DirectoryName = $LogName.Replace("\$FileName","")
+        $FileName =  $LogFile.Split('\') | Select-Object -Index (($LogFile.Split('\').Count) - 1)
+        $DirectoryName = $LogFile.Replace("\$FileName","")
 
         If (Test-Path -Path $LogFile)
         {
