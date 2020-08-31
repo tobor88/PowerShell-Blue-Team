@@ -91,7 +91,7 @@ Function Watch-PortScan {
                 Mandatory=$False,
                 ValueFromPipeline=$False)]  # End Parameter
             [ValidatePattern("\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}")]
-            [String]$ExcludeAddresses,
+            [String[]]$ExcludeAddresses,
 
             [Parameter(
                 Mandatory=$False,
