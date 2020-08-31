@@ -1,3 +1,8 @@
+## NOT READY YET
+
+
+
+
 <#
 .SYNOPSIS
 Connect to the local firewall and enables logging. It then watches and can alert in the event of a network scan being detected by the script
