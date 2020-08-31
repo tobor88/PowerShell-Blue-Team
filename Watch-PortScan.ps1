@@ -96,7 +96,6 @@ Function Watch-PortScan {
             [Parameter(
                 Mandatory=$False,
                 ValueFromPipeline=$False)]  # End Parameter
-            [ValidateCount(1)]
             [Int32]$Limit = 5,
 
             [Parameter(
