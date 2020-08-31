@@ -76,7 +76,7 @@ Function Watch-PortScan {
                 ValueFromPipeline=$True,
                 ValueFromPipelineByPropertyName=$True)]  # End Parameter
             [ValidateNotNullOrEmpty()]
-            [String[]]$OpenPorts = (Get-NetTcpConnection -State Listen).LocalPort,
+            [String[]]$OpenPorts = ((Get-NetTcpConnection -State Listen).LocalPort | Select-Object -Unique),
 
             [Parameter(
                 Mandatory=$False,
@@ -92,6 +92,7 @@ Function Watch-PortScan {
             [Parameter(
                 Mandatory=$False,
                 ValueFromPipeline=$False)]  # End Parameter
+            [ValidateCount(1)]
             [Int32]$Limit = 5,
 
             [Parameter(
@@ -122,6 +123,15 @@ Function Watch-PortScan {
         Throw "Insufficient permissions detected. Run this cmdlet in an adminsitrative prompt."
 
     }  # End Else
+
+    # This variable is used to prevent adding any ports we want open to the Blocl All Ports firewall rule
+    $LocalPort = [System.Collections.ArrayList]@(1..65535)
+    ForEach ($OpenPort in $OpenPorts) 
+    {
+
+        $LocalPort.Remove($OpenPort)
+
+    }  # End ForEach
 
     If ($PSBoundParameters.Keys -eq "LogFile")
     {
@@ -223,7 +233,7 @@ Function Watch-PortScan {
     {
 
         Write-Verbose "Blocking all uninitated inbound TCP Port Connections"
-        New-NetFirewallRule -DisplayName "Block All Ports - Inbound TCP" -Description "Blocks all inbound ports" -Direction Inbound  -Protocol TCP -LocalPort 1-65535 -Action Block | Out-Null
+        New-NetFirewallRule -DisplayName "Block All Ports - Inbound TCP" -Description "Blocks all inbound ports" -Direction Inbound  -Protocol TCP -LocalPort $LocalPort -Action Block | Out-Null
     
     }  # End If
 
@@ -231,7 +241,7 @@ Function Watch-PortScan {
     {
 
         Write-Verbose "Blocking all uninitated inbound UDP Port Connections"
-        New-NetFirewallRule -DisplayName "Block All Ports - Inbound UDP" -Description "Blocks all inbound ports" -Direction Inbound  -Protocol UDP -LocalPort 1-65535 -Action Block | Out-Null
+        New-NetFirewallRule -DisplayName "Block All Ports - Inbound UDP" -Description "Blocks all inbound ports" -Direction Inbound  -Protocol UDP -LocalPort $LocalPort -Action Block | Out-Null
   
     }  # End If
 
