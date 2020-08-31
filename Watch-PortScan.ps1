@@ -76,21 +76,17 @@ Function Watch-PortScan {
                 ValueFromPipeline=$True,
                 ValueFromPipelineByPropertyName=$True)]  # End Parameter
             [ValidateNotNullOrEmpty()]
-            [ValidateRange(1,255)]
-            [ValidateCount(1,20)]
             [String[]]$OpenPorts = (Get-NetTcpConnection -State Listen).LocalPort,
 
             [Parameter(
                 Mandatory=$False,
                 ValueFromPipeline=$False,
                 HelpMessage="`n[H] Set the absolute path and filename location to save firewall logs using the file extension .log`n[E] Example: C:\Windows\System32\logfiles\firewall\pfirewall.log")]  # End Parameter
-            [ValidateScript({$LogFile -like "*.log"})]
-            [System.IO.File]$LogFile = "C:\Windows\System32\logfiles\firewall\pfirewall.log",
+            [String]$LogFile = "C:\Windows\System32\logfiles\firewall\pfirewall.log",
 
             [Parameter(
                 Mandatory=$False,
                 ValueFromPipeline=$False)]  # End Parameter
-            [ValidatePattern("\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}")]
             [String[]]$ExcludeAddresses,
 
             [Parameter(
