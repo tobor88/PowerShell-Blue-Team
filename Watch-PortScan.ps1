@@ -163,7 +163,7 @@ Function Watch-PortScan {
         {
 
             Write-Verbose "Creating Directory for Anaylsis Files"
-            New-Item -Path "$DirectoryName\Keep_For_Analysis\$Date" -ItemType "Directory" | Out-Null
+            New-Item -Path "$DirectoryName\Keep_For_Analysis" -ItemType "Directory" | Out-Null
 
         }  # End If 
 
