@@ -227,7 +227,7 @@ Function Watch-PortScan {
 
             $TotalPorts { 
                 [uint16]$Start = (($OpenPorts[($n - 1)]) + 1)
-                [uint16]$End = $n = [uint16]::MaxValue
+                [uint16]$End = [uint16]::MaxValue
                 Write-Debug "$Start to $End"
             } 
             0 {
