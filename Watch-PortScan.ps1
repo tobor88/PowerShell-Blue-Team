@@ -40,7 +40,7 @@ Watch-PortScan -OpenPorts 80,443,445 -LogFile C:\Windows\System32\logfiles\firew
 # This example opens ports 80, 443, and 445 and blocks all other ports. The logs that will be examined are saved to C:\Windows\System32\logfiles\firewall\pfirewall.log. The alert limit is going to be set to 10 and any discovered port scanning IP address will be added to the firewalls blacklist.
 
 .EXAMPLE
-(Get-NetTcpConnection -State Listen).LocalPort | Watch-PortScan -ActiveBlock -Limit 6
+@((Get-NetTcpConnection -State Listen).LocalPort | Select-Object -Unique | Sort-Object) | Watch-PortScan -ActiveBlock -Limit 6
 # This example gets a list of currently listening ports on the device and leaves them open while blocking all other ports. The alert limit is set to 6 consecutive unsolicited packets and any discovered port scanning IP addresses are added to the firewalls blocklist.
 
 .EXAMPLE
@@ -81,7 +81,7 @@ Function Watch-PortScan {
                 ValueFromPipeline=$True,
                 ValueFromPipelineByPropertyName=$True)]  # End Parameter
             [ValidateNotNullOrEmpty()]
-            [String[]]$OpenPorts = ((Get-NetTcpConnection -State Listen,Established,FinWait1,FinWait2,Bound,CloseWait,Closing -ErrorAction SilentlyContinue).LocalPort | Select-Object -Unique),
+            [String[]]$OpenPorts = ((Get-NetTcpConnection -State Listen,Established,FinWait1,FinWait2,Bound,CloseWait,Closing -ErrorAction SilentlyContinue).LocalPort | Select-Object -Unique | Sort-Object),
 
             [Parameter(
                 Mandatory=$False,
@@ -109,9 +109,9 @@ Function Watch-PortScan {
         )  # End param
 
     # SET THESE VALUES TO RECEIVE EMAIL ALERTS WHEN DEFINING THE -EmailAlert SWITCH PARMETER
-    $To = $Null
-    $From = $Null
-    $SmtpServer = $Null
+    $To = Read-Host -Prompt "Who should alerts be sent To? "
+    $From = Read-Host -Prompt "Who should alerts be sent From? "
+    $SmtpServer = Read-Host -Prompt "Enter your SMTP Server: "
 
     Write-Verbose "Verifying permissions"
     $IsAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
@@ -124,18 +124,10 @@ Function Watch-PortScan {
     Else
     {
     
-        Throw "Insufficient permissions detected. Run this cmdlet in an adminsitrative prompt."
+        Throw "[x] Insufficient permissions detected. Run this cmdlet in an adminsitrative prompt."
 
     }  # End Else
 
-    # This variable is used to prevent adding any ports we want open to the Blocl All Ports firewall rule
-    $LocalPort = [System.Collections.ArrayList]@(1..65535)
-    ForEach ($OpenPort in $OpenPorts) 
-    {
-
-        $LocalPort.Remove($OpenPort)
-
-    }  # End ForEach
 
     If ($PSBoundParameters.Keys -eq "LogFile")
     {
@@ -180,7 +172,6 @@ Function Watch-PortScan {
         $DateFormat = Get-Date -Format yyyy.MM.dd
         $TimeFormat = Get-Date -Format HH.mm.ss -DisplayHint Time
 
-        $LogName = $LogFile
         $TempLogname = "$DirectoryName\$FileName_temp.log"
 
         $PreserveLocation = "$DirectoryName\Keep_For_Analysis\$DateFormat\scan_attempts_$TimeFormat.log"
@@ -203,74 +194,87 @@ Function Watch-PortScan {
     }  # End Else
 
     $ScanCounter = 0
-    $IPs = [System.Net.Dns]::GetHostAddresses("$env:COMPUTERNAME").Where({$_.AddressFamily -eq 'InterNetwork'}).IpAddressToString
-    If ($ExcludeAddresses)
-    {
-
-        $IPs += $ExcludeAddresses
-
-    }  # End If
-    Else 
-    {
-     
-        Write-Verbose "No extra IPv4 addresses will be excluded from scanner results."
-        
-    }
-    $DnsServers = Get-CimInstance -ClassName "Win32_NetworkAdapterConfiguration" | ForEach-Object -MemberName "DNSServerSearchOrder"
     $ScanFound = $False
-    $BlockIps = @()
+    $BlockPortRanges = [System.Collections.ArrayList]::New()
+    $BlockIps = [System.Collections.ArrayList]::New()
+    $AllPorts = [System.Collections.ArrayList]@(1..65535)
+    [uint16]$TotalPorts = $OpenPorts.Count
+    $IPs = [System.Net.Dns]::GetHostAddresses("$env:COMPUTERNAME").Where({$_.AddressFamily -eq 'InterNetwork'}).IpAddressToString
+    $DnsServers = Get-CimInstance -ClassName "Win32_NetworkAdapterConfiguration" | ForEach-Object -MemberName "DNSServerSearchOrder"
+    $DnsServers += $ExcludeAddresses
 
+    $CurrentEntryObject = New-Object -TypeName PSCustomObject -Property @{Date=""; Time=""; Action=""; Protocol=""; SourceIP=""; DestinationIP=""}
+    $PreviousEntryObject = New-Object -TypeName PSCustomObject -Property @{Date=""; Time=""; Action=""; Protocol=""; SourceIP=""; DestinationIP=""}
 
-    Write-Verbose "Enabling required Firewall Rules"
+    Write-Verbose "Enabling Windows Firewall"
     Set-NetFirewallProfile -Enabled True
 
     Write-Verbose "Enable logging for blocked connections"
-    Set-NetFirewallProfile -LogAllowed False -LogBlocked True -LogFileName $LogFile
+    Set-NetFirewallProfile -LogAllowed False -LogBlocked True -LogFileName "$LogFile"
  
     Write-Verbose "Getting a list of all the firewall rule names"
     $FirewallRule = New-Object -ComObject HNetCfg.FwPolicy2
     $FwRuleNames = $FirewallRule.Rules | Select-Object -Property "Name"
 
+    Write-Output "[*] Creating Firewall Rules to allow open ports and block all others"
 
-    Write-Verbose "Creating firewall rule to block all uninitated inbound traffic. Returning packets from initated connections will be allowed."
-    If($FwRuleNames -NotContains "Block All Ports - Inbound TCP")
+    Write-Verbose "Blocking all uninitated inbound TCP Port Connections"
+    For ($n = [uint16]::MinValue; [uint16]$n -le $OpenPorts.Count ; [uint16]$n++)
     {
 
-        Write-Verbose "Blocking all uninitated inbound TCP Port Connections"
-        New-NetFirewallRule -DisplayName "Block All Ports - Inbound TCP" -Description "Blocks all inbound ports" -Direction Inbound  -Protocol TCP -LocalPort $LocalPort -Action Block | Out-Null
-    
-    }  # End If
-
-    If($FwRuleNames -NotContains "Block All Ports - Inbound UDP")
-    {
-
-        Write-Verbose "Blocking all uninitated inbound UDP Port Connections"
-        New-NetFirewallRule -DisplayName "Block All Ports - Inbound UDP" -Description "Blocks all inbound ports" -Direction Inbound  -Protocol UDP -LocalPort $LocalPort -Action Block | Out-Null
-  
-    }  # End If
-
-
-    If ($PSBoundParameters.Keys -eq "OpenPorts")
-    {
-
-        Write-Verbose "Allowing traffic to specified ports: $OpenPorts"
-        ForEach ($Port in $OpenPorts)
+        Switch ([uint16]$n)
         {
 
-            $RuleName = "Blacklist Exception for Port $Port"
-            If ($FwRuleNames -NotContains $RuleName)
-            {
+            $TotalPorts { 
+                [uint16]$Start = (($OpenPorts[($n - 1)]) + 1)
+                [uint16]$End = $n = [uint16]::MaxValue
+                Write-Debug "$Start to $End"
+            } 
+            0 {
+                [uint16]$Start = $n
+                [uint16]$End = ($OpenPorts[$n] - 1)
+                Write-Debug "$Start to $End"
+            }
+            Default { 
+                [uint16]$Value = (($OpenPorts[($n - 1)]))
+                [uint16]$Start = ($Value + 1)
+                [uint16]$End = ($OpenPorts[$n] - 1)
+                Write-Debug "$Start to $End" }
 
-                New-NetFirewallRule -DisplayName $RuleName -Description "Allow inbound traffic on port $Port" -Direction "Inbound" -Protocol "TCP" -LocalPort $Port -Action "Allow" | Out-Null
-            
-            }  # End If
+        }  # End Switch
 
-        }  # End ForEach
+        If ($Start -ne $End)
+        {
 
+            $BlockPortRanges.Add("$Start-$End") | Out-Null
+
+        }  # End If
+        ElseIf ($Start -eq $End)
+        {
+
+            $BlockPortRanges.Add("$Start") | Out-Null
+
+        }  # End ElseIf
+
+    }  # End For
+
+    $LocalPort = $BlockPortRanges -Join ','
+
+    Write-Debug $LocalPort
+
+
+    If ($FwRuleNames -NotContains "Block Ports $BlockPortRanges - Inbound TCP")
+    {
+
+        Write-Verbose "Blocking inbound TCP Port Connections $BlockPortRanges"
+        New-NetFirewallRule -DisplayName "Block Ports $BlockPortRanges - Inbound TCP" -Description "Blocks inbound ports $BlockPortRanges - TCP" -Direction Inbound  -Protocol TCP -LocalPort $LocalPort -Action Block | Out-Null
+
+        Write-Verbose "Blocking all uninitated inbound UDP Port Connections $BlockPortRanges"
+        New-NetFirewallRule -DisplayName "Block Ports $BlockPortRanges - Inbound UDP" -Description "Blocks inbound ports $BlockPortRanges - UDP" -Direction Inbound  -Protocol UDP -LocalPort $LocalPort -Action Block | Out-Null
+        
     }  # End If
 
-    $CurrentEntryObject = New-Object -TypeName PSCustomObject -Property @{Date=""; Time=""; Action=""; Protocol=""; SourceIP=""; DestinationIP=""}
-    $PreviousEntryObject = New-Object -TypeName PSCustomObject -Property @{Date=""; Time=""; Action=""; Protocol=""; SourceIP=""; DestinationIP=""}
+    
 
     While ($True)
     {
@@ -319,7 +323,7 @@ Function Watch-PortScan {
                                 $BadGuyIP = $CurrentEntryObject.SourceIP
 
                                 Write-Output "[*] Scan detected: Adding $BadGuyIP to the block list. If -ActiveBlockList was specified the IP will be blocked shortly"
-                                $BlockIps += $BadGuyIP
+                                $BlockIps.Add($BadGuyIP)
     
                             }  # End If
                             Else 
@@ -339,7 +343,7 @@ Function Watch-PortScan {
   
                     }  # End If
   
-                }  # End If
+                }  # End 
   
             }  # End If
             Else
@@ -361,7 +365,9 @@ Function Watch-PortScan {
             Add-Content -Path $PreserveLocation -Value "Possible Scan Attempts on $env:COMPUTERNAME at $ScanDate`n`n$Logs`n"
 
             Set-NetFirewallProfile -LogFileName $TempLogName
+
             Clear-Content -Path $LogName
+
             Set-NetFirewallProfile -LogFileName $LogName
 
             If ($ActiveBlockList.IsPresent)
@@ -381,8 +387,7 @@ Function Watch-PortScan {
                     {
 
                         Write-Verbose "Creating firewall rule to block port scanners IP address"
-                        New-NetFirewallRule -DisplayName $RuleName -Name $RuleName -Description "Blocks the IP $IP which may be port scanning" -Direction Inbound -RemoteAddress $IP -Action Block | 
-                        Out-Null
+                        New-NetFirewallRule -DisplayName $RuleName -Name $RuleName -Description "Blocks the IP $IP which may be port scanning" -Direction Inbound -RemoteAddress $IP -Action Block | Out-Null
 
                         Write-Verbose "Creating firewall rule to block port scanners IP address"
                         New-NetFirewallRule -DisplayName $RuleNameOut -Name $RuleNameOut -Description "Blocks the IP $IP which may be port scanning" -Direction Outbound -RemoteAddress $IP -Action Block | Out-Null
@@ -403,10 +408,6 @@ Function Watch-PortScan {
 
             If ($EmailAlert.IsPresent)
             {
-
-                If ($Null -eq $To) { $To = Read-Host -Prompt "Who should this email be sent to? "}
-                If ($Null -eq $From) {$From = Read-Host -Prompt "Who should this email be sent from? "}
-                If ($Null -eq $SmtpServer) {$SmtpServer = Read-Host -Propmt "Define your SMTP Server: "}
 
                 $Body = "A possible attempted port scan was discovered on $env:COMPUTERAME. The log file has been attached to this email."
                 Send-MailMessage -To $To -From $From -SmtpServer $SmtpServer -Priority High -Subject "ALERT: Attempted Port Scan $env:COMPUTERNAME" -Body $Body -Attachments $PreservationLocation
