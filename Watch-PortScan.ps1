@@ -240,22 +240,30 @@ Function Enable-FirewallLogging {
     Set-NetFirewallProfile -Enabled True
 
     $Result = Get-NetFirewallProfile | Select-Object -Property Name,Enabled
-    If (((Get-NetFirewallProfile).Enabled) -eq 'False')
+
+    ForEach ($Re in $Result)
     {
 
-        Write-Output "[*] Firewall has been enabled"
-        $Result
+        If ((($Re).Enabled) -eq 'True')
+        {
 
-    }   # End If
-    Else
-    {
+            Write-Output "[*] $Re Firewall has been enabled"
+            
+            $Re.Name
+            $Re.Enabled
 
-        Write-Output "[x] Firewall is not enabled. This may because of group policy settings. Your current settings are below"
-        $Result
+        }   # End If
+        ElseIf (($Re.Enabled) -eq 'False')
+        {
 
-    }  # End Else
+            Write-Output "[x] $Re Firewall is disabled. This may because of group policy settings. Your current settings are below"
+            
+            $Re.Name
+            $Re.Enabled
 
+        }  # End ElseIf
 
+    }  # End ForEach
 
     Write-Verbose "Enable logging for blocked connections"
     Set-NetFirewallProfile -Name Domain -LogAllowed True -LogBlocked True -LogFileName "$Path\domainfw.log"
@@ -263,21 +271,30 @@ Function Enable-FirewallLogging {
     Set-NetFirewallProfile -Name Public -LogAllowed False -LogBlocked True -LogFileName "$Path\publicfw.log"
 
     $Results = Get-NetFirewallProfile | Select-Object -Property Name,LogAllowed,LogBlocked,LogFileName
-    If (((Get-NetFirewallProfile).LogBlocked) -eq 'False')
+
+    ForEach ($R in $Results)
     {
 
-        Write-Output "[*] Firewall logging of blocked connections has been enabled"
-        $Results
+        If ((($R).LogBlocked) -eq 'True')
+        {
 
-    }   # End If
-    Else
-    {
+            Write-Output "[*] $R Firewall logging of blocked connections has been enabled"
 
-        Write-Output "[x] Firewall logging of blocked connectiosn was NOT enabled. This may because of group policy settings. Your current settings are below"
-        $Results
+            $R.Name
+            $R.LogBlocked
 
-    }  # End Else
+        }   # End If
+        ElseIf (($R.LogBlocked) -eq 'False')
+        {
 
+            Write-Output "[x] $R Firewall logging of blocked connectiosn was NOT enabled"
+
+            $R.Name
+            $R.Logblocked
+
+        }  # End ElseIf
+
+    }  # End ForEach
 }  # End Function 
 
 
@@ -590,16 +607,16 @@ Function Watch-PortScan {
         If ($FwRuleNames.Name -NotContains "Block Ports $StringPortRange - Inbound TCP")
         {
 
-            Write-Verbose "Blocking inbound TCP Port Connections $BlockPortRange"
             New-NetFirewallRule -DisplayName "Block Ports $BlockPortRange - Inbound TCP" -Description "Blocks inbound ports $BlockPortRange - TCP" -Direction Inbound  -Protocol TCP -LocalPort $BlockPortRange -Action Block -ErrorAction SilentlyContinue | Out-Null
 
-            Write-Verbose "Blocking all uninitated inbound UDP Port Connections $BlockPortRange"
             New-NetFirewallRule -DisplayName "Block Ports $BlockPortRange - Inbound UDP" -Description "Blocks inbound ports $BlockPortRange - UDP" -Direction Inbound  -Protocol UDP -LocalPort $BlockPortRange -Action Block -ErrorAction SilentlyContinue | Out-Null
  
         }  # End If
 
     }  # End ForEach
     
+    $Now = (Get-Date).Ticks
+    $LastMinute = ((Get-Date -DisplayHint Time).AddMinutes(-1)).Ticks
 
     While ($True)
     {
@@ -614,7 +631,12 @@ Function Watch-PortScan {
             $Entry = $Log.Split()
  
             $PreviousEntryObject = $CurrentEntryObject
-  
+            
+            $StrDate = $Entry[0]
+            $StrTime = $Entry[1] 
+            $StrDateTime = "$StrDate $StrTime"
+            $CurrentEntryObjectDate = ([Datetime]::ParseExact($StrDateTime, 'yyyy-MM-dd HH:mm:ss', $Null)).Ticks
+    
             $CurrentEntryObject.Date = $Entry[0]
             $CurrentEntryObject.Time = $Entry[1]
             $CurrentEntryObject.Action = $Entry[2]
@@ -622,8 +644,7 @@ Function Watch-PortScan {
             $CurrentEntryObject.SourceIP = $Entry[4]
             $CurrentEntryObject.DestinationIP = $Entry[5]
             
-            Write-Verbose "Parsing traffic destined for the local device and disregarding DNS traffic"
-            If (($IPs -Contains $CurrentEntryObject.DestinationIP) -and ($DnsServers -NotContains $CurrentEntryObject.SourceIP))
+            If (($IPs -Contains $CurrentEntryObject.DestinationIP) -and ($DnsServers -NotContains $CurrentEntryObject.SourceIP) -and (($CurrentEntryObjectDate -le $Now) -and ($CurrentEntryObjectDate -ge $LastMinute)))
             {
 
                 Write-Output "[*] A match has been found, checking to see if the address has been repeated"
@@ -688,18 +709,6 @@ Function Watch-PortScan {
 
             Write-Output "[*] Possible scan attempt Found. Adding log info to $PreservationLocation"
             Add-Content -Path $PreserveLocation -Value "Possible Scan Attempts on $env:COMPUTERNAME at $ScanDate`n`n$Logs`n"
-
-            Set-NetFirewallProfile -Name Domain -LogAllowed True -LogBlocked True -LogFileName $TempLogName
-            Set-NetFirewallProfile -Name Private -LogAllowed True -LogBlocked True -LogFileName $TempLogName
-            Set-NetFirewallProfile -Name Public -LogAllowed False -LogBlocked True -LogFileName $TempLogName
-
-            Clear-Content -Path $LogFile
-
-
-            Write-Verbose "Reseting the log file value for public, private, and domain firewall."
-            Set-NetFirewallProfile -Name Domain -LogAllowed True -LogBlocked True -LogFileName "$Path\domainfw.log"
-            Set-NetFirewallProfile -Name Private -LogAllowed True -LogBlocked True -LogFileName "$Path\privatefw.log"
-            Set-NetFirewallProfile -Name Public -LogAllowed False -LogBlocked True -LogFileName "$Path\publicfw.log"
 
             If ($ActiveBlockList.IsPresent)
             {
