@@ -247,7 +247,7 @@ Function Enable-FirewallLogging {
         If ((($Re).Enabled) -eq 'True')
         {
 
-            Write-Output "[*] $Re Firewall has been enabled"
+            Write-Output "[*] Firewall has been enabled"
             
             $Re.Name
             $Re.Enabled
@@ -256,7 +256,7 @@ Function Enable-FirewallLogging {
         ElseIf (($Re.Enabled) -eq 'False')
         {
 
-            Write-Output "[x] $Re Firewall is disabled. This may because of group policy settings. Your current settings are below"
+            Write-Output "[x] Firewall is disabled. This may because of group policy settings. Your current settings are below"
             
             $Re.Name
             $Re.Enabled
@@ -278,7 +278,7 @@ Function Enable-FirewallLogging {
         If ((($R).LogBlocked) -eq 'True')
         {
 
-            Write-Output "[*] $R Firewall logging of blocked connections has been enabled"
+            Write-Output "[*] Firewall logging of blocked connections has been enabled"
 
             $R.Name
             $R.LogBlocked
@@ -287,7 +287,7 @@ Function Enable-FirewallLogging {
         ElseIf (($R.LogBlocked) -eq 'False')
         {
 
-            Write-Output "[x] $R Firewall logging of blocked connectiosn was NOT enabled"
+            Write-Output "[x] Firewall logging of blocked connectiosn was NOT enabled"
 
             $R.Name
             $R.Logblocked
@@ -518,7 +518,6 @@ Function Watch-PortScan {
     # Defining array variables that will be utilized
     $BlockPortRanges = [System.Collections.ArrayList]::New()
     $BlockIps = [System.Collections.ArrayList]::New()
-    $AllPorts = [System.Collections.ArrayList]@(1..65535)
     $TotalPorts = [uint16]$OpenPorts.Count
 
     # Defining IP Addresses to filter out normal traffic flows to help prevent false positives
@@ -734,7 +733,8 @@ Function Watch-PortScan {
 
 }  # End Function Watch-PortScan
 
-
+Write-Output "[*] Removing firewall rules created the last time this was run"
+Remove-NetFirewallRule -Description "Blocks inbound ports * - *P" -Direction Inbound | Out-Null
 
 $LogPath = "C:\Windows\System32\LogFiles\Firewall"
 $OpenPorts = ((Get-NetTcpConnection -State Listen,Established,FinWait1,FinWait2,Bound,CloseWait,Closing -ErrorAction SilentlyContinue).LocalPort | Select-Object -Unique | Sort-Object) 
