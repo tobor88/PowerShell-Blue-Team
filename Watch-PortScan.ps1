@@ -466,8 +466,7 @@ https://www.linkedin.com/in/roberthosborne/
 https://www.youracclaim.com/users/roberthosborne/badges
 https://www.hackthebox.eu/profile/52286
 
-#>
-Function Watch-PortScan {
+#>Function Watch-PortScan {
     [CmdletBinding()]
         param (
             [Parameter(
@@ -503,6 +502,11 @@ Function Watch-PortScan {
 
 
     Test-Admin 
+
+    # SET THESE VALUES TO RECEIVE EMAIL ALERTS WHEN DEFINING THE -EmailAlert SWITCH PARMETER
+    $To = "it@usav.org"
+    $From = "it@usav.org"
+    $SmtpServer = "207.46.163.74"
 
     # Log files that are used to keep information for later analysis
     $FileName =  $LogFile.Split('\') | Select-Object -Index (($LogFile.Split('\').Count) - 1)
@@ -542,6 +546,7 @@ Function Watch-PortScan {
         Throw "[!] The path you defined, $LogFile, needs to end in a .log file extension"
 
     }  # End ELse 
+
 
     Write-Verbose "Creating log file and directory location for Log Anaylsis"
     New-Item -Path $LogDirectory -ItemType "Directory" -Force -ErrorAction SilentlyContinue | Out-Null
@@ -598,7 +603,7 @@ Function Watch-PortScan {
 
     }  # End For
 
-
+    Write-Output "[*] Creating firewall rules"
     ForEach ($BlockPortRange in $BlockPortRanges)
     {
 
@@ -615,15 +620,16 @@ Function Watch-PortScan {
     }  # End ForEach
     
     $Now = (Get-Date).Ticks
-    $LastMinute = ((Get-Date -DisplayHint Time).AddMinutes(-1)).Ticks
+    $LastMinute = ((Get-Date -DisplayHint Time).AddSeconds((-100)).Ticks)
 
+    Write-Verbose "Parsing log file entrys"
     While ($True)
     {
-        
+           
         Write-Output "[*] Checking log entries for scanning attempts"
-        $Logs = Get-Content -Path $LogFile
-  
-        Write-Verbose "Parsing log file entrys"
+       
+        $Logs = Get-Content -Path $LogFile -Tail 5000
+   
         ForEach ($Log in $Logs)
         {
 
@@ -634,7 +640,19 @@ Function Watch-PortScan {
             $StrDate = $Entry[0]
             $StrTime = $Entry[1] 
             $StrDateTime = "$StrDate $StrTime"
-            $CurrentEntryObjectDate = ([Datetime]::ParseExact($StrDateTime, 'yyyy-MM-dd HH:mm:ss', $Null)).Ticks
+
+            Try 
+            {
+                
+                $CurrentEntryObjectDate = ([Datetime]::ParseExact($StrDateTime, 'yyyy-MM-dd HH:mm:ss', $Null)).Ticks
+
+            }  # End Try
+            Catch 
+            {
+
+                Continue
+
+            }  # End Catch
     
             $CurrentEntryObject.Date = $Entry[0]
             $CurrentEntryObject.Time = $Entry[1]
@@ -642,22 +660,41 @@ Function Watch-PortScan {
             $CurrentEntryObject.Protocol = $Entry[3]
             $CurrentEntryObject.SourceIP = $Entry[4]
             $CurrentEntryObject.DestinationIP = $Entry[5]
-            
-            If (($IPs -Contains $CurrentEntryObject.DestinationIP) -and ($DnsServers -NotContains $CurrentEntryObject.SourceIP) -and (($CurrentEntryObjectDate -le $Now) -and ($CurrentEntryObjectDate -ge $LastMinute)))
+
+                  # Destination IP is this machine                        # The traffic is not from the local machine          # The Source IP is not on allowed list                      # Resutls from the last minute
+            If (($IPs -Contains $CurrentEntryObject.DestinationIP) -and ($IPs -NotContains $CurrentEntryObject.SourceIP) -and ($DnsServers -NotContains $CurrentEntryObject.SourceIP) -and (($CurrentEntryObjectDate -le $Now) -and ($CurrentEntryObjectDate -ge $LastMinute)))
             {
 
                 Write-Output "[*] A match has been found, checking to see if the address has been repeated"
+                
                 If ($CurrentEntryObject.SourceIP -eq $PreviousEntryObject.SourceIP)
                 {
 
                     $ScanCounter++
-                    
+
                     Write-Verbose "Alert limit is set to $Limit consecutive unsolicited packets from the same source IP"
-                    If ($ScanCounter -eq $Limit)
+                    If ($ScanCounter -ge $Limit)
                     {
   
+                        Write-Output "[!] Alert Limit Has Been Reached"
                         $ScanCounter = 0
                         $ScanFound = $True
+
+                        $IPForEmail = ($CurrentEntryObject.SourceIP).ToString()
+                        $DestinationForEmail = ($CurrentEntryObject.DestinationIP).ToString()
+                        $ProtocolForEmail = ($CurrentEntryObject.Protocol).ToString()
+                        $DateTimeForEmail = ($CurrentEntryObject.Date).ToString() + " " + ($CurrentEntryObject.Time).ToString()
+
+                        If ($EmailAlert.IsPresent)
+                        {
+
+                            Write-Output "[*] Alerting admins"
+
+                            $Body = " =======================================================`n PORT SCAN DETECTED: $env:COMPUTERNAME `n=======================================================`n`nSUMMARY: `nA possible port scan was discovered on $env:COMPUTERAME. To examine these results further the firewall logs to review are in C:\Windows\System32\LogFiles\firewall\Keep_For_Analysis. `n`nSCAN INFO: `nSOURCE IP: $IPForEmail `nDESTINATION: $DestinationForEmail `nPROTOCOL: $ProtocolForEmail `nDATE TIME: $DateTimeForEmail`n"
+                
+                            Send-MailMessage -To $To -From $From -SmtpServer $SmtpServer -Priority High -Subject "ALERT: Attempted Port Scan $env:COMPUTERNAME" -Body $Body
+
+                        }  # End If
                         
                         If ($PSBoundParameters.Key -eq "ActiveBlockList")
                         {
@@ -671,20 +708,8 @@ Function Watch-PortScan {
                                 $BlockIps.Add($BadGuyIP)
     
                             }  # End If
-                            Else 
-                            {
-
-                                Write-Verbose "No port scan source IP addresses detected"
-                                
-                            }  # End Else
 
                         }  # End If
-                        Else 
-                        {
-
-                            Write-Output "[*] If the -ActiveBlockList parameter was specified the below IPs would have been added to the Firewall's Block List`n`n$BlockIps"
-
-                        }  # End Else
   
                     }  # End If
   
@@ -694,13 +719,12 @@ Function Watch-PortScan {
             Else
             {
   
-                Write-Verbose "Resetting the unintiated packet scan counter"
                 $ScanCounter = 0
-  
+            
             }  # End Else
   
         }  # End ForEach
-
+    
         If ($ScanFound -eq $True)
         {
 
@@ -709,6 +733,7 @@ Function Watch-PortScan {
             Write-Output "[*] Possible scan attempt Found. Adding log info to $PreservationLocation"
             Add-Content -Path $PreserveLocation -Value "Possible Scan Attempts on $env:COMPUTERNAME at $ScanDate`n`n$Logs`n"
 
+
             If ($ActiveBlockList.IsPresent)
             {
 
@@ -716,18 +741,13 @@ Function Watch-PortScan {
 
             }  # End If
 
-            If ($EmailAlert.IsPresent)
-            {
-
-                $Body = "A possible attempted port scan was discovered on $env:COMPUTERAME. To examine these results further the firewall logs to review are in C:\Windows\System32\LogFiles\firewall\Keep_For_Analysis"
-                Send-MailMessage -To $To -From $From -SmtpServer $SmtpServer -Priority High -Subject "ALERT: Attempted Port Scan $env:COMPUTERNAME" -Body $Body
-
-            }  # End If
-
         }  # End If
 
         Write-Verbose "Waiting 60 seconds before next check"
         Start-Sleep -Seconds 60
+
+        $Now = (Get-Date).Ticks
+        $LastMinute = ((Get-Date -DisplayHint Time).AddSeconds((-100)).Ticks)
 
     }  # End While Loop
 
