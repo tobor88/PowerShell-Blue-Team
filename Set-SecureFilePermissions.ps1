@@ -28,6 +28,10 @@ Set-SecureFilePermissions -Username 'NT AUTHORITY\SYSTEM', 'BUILTIN\Administrato
 Set-SecureFilePermissions -Username 'NT AUTHORITY\SYSTEM','BUILTIN\Administrators' -Path "C:\Temp\derp.log" -Owner 'BUILTIN\SYSTEM' -ComputerName 10.0.0.1
 # This example gives administrators and system permissions to the derp.log file and makes SYSTEM the owner on the remote device 10.0.0.1
 
+.EXAMPLE
+$Files = Get-ChildItem -Path $env:USERPROFILE\Documents\Scripts -Recurse -Filter *.ps1
+$Files | ForEach-Object { Set-SecureFilePermissions -Username 'NT AUTHORITY\SYSTEM', 'BUILTIN\Administrators', 'CONTOSO\Mike' -Path $_.FullName -Owner 'CONTOSO\Mike' -Verbose }
+# This example sets SYSTEM, Administrators, and Mike to have permissions to any ps1 files in the directory defined and sets Mike as the owner.
 
 .NOTES
 Author: Robert H. Osborne
