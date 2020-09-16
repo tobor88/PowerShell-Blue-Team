@@ -615,11 +615,6 @@ Function Watch-PortScan {
 
     Test-Admin 
 
-    # SET THESE VALUES TO RECEIVE EMAIL ALERTS WHEN DEFINING THE -EmailAlert SWITCH PARMETER
-    $To = "it@usav.org"
-    $From = "it@usav.org"
-    $SmtpServer = "207.46.163.74"
-
     # Log files that are used to keep information for later analysis
     $FileName =  $LogFile.Split('\') | Select-Object -Index (($LogFile.Split('\').Count) - 1)
     $DirectoryName = $LogFile.Replace("\$FileName","")
