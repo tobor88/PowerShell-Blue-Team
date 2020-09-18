@@ -17,7 +17,7 @@ PS> Watch-PortScan -OpenPorts 80,443
 $OpenPorts = (Get-NetTcpConnection -State Listen).LocalPort
 $OpenPorts | Watch-PortScan -EmailAlert
 ```
-![Port Scan Alert Results](https://raw.githubusercontent.com/tobor88/PowerShell-Blue-Team/master/PortScanAlert.png)
+![Port Scan Alert Results](https://raw.githubusercontent.com/tobor88/PowerShell-Blue-Team/master/WatchPortScanImage.png)
 
 - ### Disable-WeakSSL.psm1
 This function is used for changing the registry values for RC4 and AES Ciphers as well as SSL2.0, SSL3.0, TLS1.0, TLS1.1, and TLS1.2. Enabling all of the switches will set the recommended SCAP disabled and enabled values for these for IIS 10.
