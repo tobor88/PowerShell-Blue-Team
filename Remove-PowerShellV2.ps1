@@ -7,6 +7,10 @@ This cmdlet is used to remove PowerShell version 2 from a device if it is instal
 This cmdlet checks whether or not PowerShell version 2 is installed and then removes it if it is.
 
 
+.PARAMETER ComputerName
+This parameter is used to define a single device or a list of devices to disable PowerShell version 2 on
+
+
 .EXAMPLE
 Remove-PowerShellV2
 # This example removes PowerShell version 2 if it is installed on the local machine
