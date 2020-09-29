@@ -1,50 +1,42 @@
 <#
-.NAME
-    Remove-PowerShellV2
-
-
 .SYNOPSIS
-    This cmdlet is used to remove PowerShell version 2 from a device if it is installed.
-    PowerShell v2 is able to be used in a PowerShell downgrade attack which bypasses modern
-    PowerShell defenses.
+This cmdlet is used to remove PowerShell version 2 from a device if it is installed. PowerShell v2 is able to be used in a PowerShell downgrade attack which bypasses modern PowerShell defenses.
 
 
 .DESCRIPTION
-    This cmdlet checks whether or not PowerShell version 2 is installed and then removes it
-    if it is.
+This cmdlet checks whether or not PowerShell version 2 is installed and then removes it if it is.
 
 
 .EXAMPLE
-    -------------------------- EXAMPLE 1 --------------------------
-    PS> Remove-PowerShellV2
-    This example removes PowerShell version 2 if it is installed on the local machine
+Remove-PowerShellV2
+# This example removes PowerShell version 2 if it is installed on the local machine
 
-    -------------------------- EXAMPLE 2 --------------------------
-    PS> Remove-PowerShellV2 -ComputerName DC01,Desktop20
-    This example removes PowerShell version 2 from the remote devices DC01 and Desktop20
+.EXAMPLE
+Remove-PowerShellV2 -ComputerName DC01,Desktop20
+# This example removes PowerShell version 2 from the remote devices DC01 and Desktop20
 
 
 .NOTES
-    Author: Rob Osborne
-    Alias: tobor
-    Contact: rosborne@osbornepro.com
+Author: Robert H. Osborne
+Alias: tobor
+Contact: rosborne@osbornepro.com
 
 
 .INPUTS
-    None
+None
 
 
 .OUTPUTS
-    None
+None
 
 
 .LINK
-    https://gitlab.com/tobor88
-    https://github.com/tobor88
-    https://www.powershellgallery.com/profiles/tobor
-    https://roberthosborne.com
-    https://osbornepro.com
-
+https://gitlab.com/tobor88
+https://github.com/tobor88
+https://www.powershellgallery.com/profiles/tobor
+https://roberthosborne.com
+https://osbornepro.com
+https://btps-secpack.com
 #>
 Function Remove-PowerShellV2 {
     [CmdletBinding()]
