@@ -185,6 +185,9 @@ PROCESS
 
     Start-ComplianceSearch -Identity $Search.Identity
 
+    Write-Output “[*] Waiting 4 minutes for the search to complete”
+    Start-Sleep -Seconds 240
+
    
     Write-Verbose "Deleting the inbox messages discovered in the previous search results from mailboxes where the spam email exists."
     New-ComplianceSearchAction -SearchName "$Date Remove Phishing Message" -Purge -PurgeType SoftDelete
