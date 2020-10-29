@@ -39,7 +39,7 @@
 
 
 .EXAMPLE
-    -------------------------- EXAMPLE 1 --------------------------
+.EXAMPLE 1
     Resolve-WindowsSpeculativeExecutionConf
     This example mitigates a variety of
 

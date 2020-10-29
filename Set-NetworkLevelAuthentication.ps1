@@ -31,15 +31,15 @@
 
 
 .EXAMPLE
-    -------------------------- EXAMPLE 1 --------------------------
+.EXAMPLE 1
     PS> Set-NetworkLevelAuthentication
     This example enables NLA for RDP on the local computer
 
-    -------------------------- EXAMPLE 2 --------------------------
+.EXAMPLE 2
     PS> Set-NetworkLevelAuthentication -ComputerName Desktop01.domain.com
     This example enables NLA for RDP on a remote computer; Desktop01.domain.com
 
-    -------------------------- EXAMPLE 2 --------------------------
+.EXAMPLE 2
     PS> Set-NetworkLevelAuthentication -ComputerName Desktop01.domain.com -Undo
     This example disables NLA for RDP on a remote computer; Desktop01.usav.org
 

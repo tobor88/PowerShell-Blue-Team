@@ -12,15 +12,15 @@
 
 
 .EXAMPLE
-    -------------------------- EXAMPLE 1 --------------------------
+.EXAMPLE 1
     C:\PS> Enable-DoH
     This example enables DNS over HTPS on a windows machine.
 
-    -------------------------- EXAMPLE 2 --------------------------
+.EXAMPLE 2
    C:\PS> Enable-DoH -Restart
    This example enables DNS over HTTPS on a Windows machines and then restarts the computer after the runner confirms
 
-   -------------------------- EXAMPLE 3 --------------------------
+   EXAMPLE 3
    C:\PS> Enable-DoH -Undo -Restart
    This example disable DNS over HTTPS on a Windows machine and restarts the computer after the runner confirms
 

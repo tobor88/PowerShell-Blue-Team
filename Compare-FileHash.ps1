@@ -58,7 +58,7 @@
 
 
 .EXAMPLE
-    -------------------------- EXAMPLE 1 --------------------------
+.EXAMPLE 1
     C:\PS> Compare-FileHash -FilePath C:\Path\To\File.exe -Hash 'e399fa5f4aa087218701aff513cc4cfda332e1fbd0d7c895df57c24cd5510be3' -Algorithm SHA256
     This examples obtains a SHA256 hash of File.exe and compares it to the checksum value e399fa5f4aa087218701aff513cc4cfda332e1fbd0d7c895df57c24cd5510be3
 

@@ -35,7 +35,7 @@
         
 
 .EXAMPLE
-    -------------------------- EXAMPLE 1 --------------------------
+.EXAMPLE 1
     Remove-SpamEmail -ContentMatchQuery '(Received:4/13/2020..4/14/2020) AND (Subject:`"Action required`")'
     Remove-SpamEmail -ExchangeOnline -ContentMatchQuery '(Received:4/13/2020..4/14/2020) AND (Subject:`"Action required`")'
     
@@ -45,7 +45,7 @@
     not on site and managed by Microsoft.
     
 
-    -------------------------- EXAMPLE 2 --------------------------
+.EXAMPLE 2
     Remove-SpamEmail -OnPremise -ContentMatchQuery '(Received:4/13/2020) AND (Subject:`"Action required`")' -ConnectionUri "https://exchangeserver.domain.com/Powershell"
   
     This example finds every email received from April 13 2020 with the Subject Action Required and removes it from every ones inbox.
@@ -53,7 +53,7 @@
     to be defined containing a link to your Exchange Server. This has not been tested so if you experience issues with this please inform me
     what they are.
 
-    -------------------------- EXAMPLE 3 --------------------------
+.EXAMPLE 3
     Remove-SpamEmail -MFA -OnPremise -ContentMatchQuery '(Received:4/13/2020) AND (Subject:`"Action required`")' -ConnectionUri "https://exchangeserver.domain.com/Powershell"
   
     This example finds every email received from April 13 2020 with the Subject Action Required and removes it from every ones inbox.

@@ -4,7 +4,7 @@
 #===========================================================================
 # - This will require a CSV file containing a ComputerName header and Name header
 # - The script needs to be run on a domain controller logging Event ID 4624
-# --------------------------------------------------------------------------
+#------------------------------------------------
 
 # Csv file containing the headers ComputerName and Name
 $CsvInformation = Import-Csv -Path "$env:USERPROFILE\Documents\UserComputerList.csv" -Delimiter ',' 
