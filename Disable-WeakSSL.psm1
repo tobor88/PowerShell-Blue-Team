@@ -1,10 +1,10 @@
 <#
 .SYNOPSIS
-This cmdlet was created to disable weak SSL protocols and Ciphers on a Windows Client and Server. If no parameters are specified, TLSv1.2 and AES 256 are enabled and NULL encryption is disabled. Other ciphers can be disabled my individually specifying their values or by using the -CISBenchmarkRecommendations parameter.
+This cmdlet was created to disable weak SSL protocols and Ciphers on a Windows Client and Server. If no parameters are specified, TLSv1.2, TLSv1.3 and AES256 are enabled and NULL encryption is disabled. Other ciphers can be disabled my individually specifying their values or by using the -CISBenchmarkRecommendations parameter.
 
 
 .DESCRIPTION
-This cmdlet has the option to disable the weak ciphers such as TipleDES, RC4, and disabled null. SSL 2.0, 3.0, TLS 1.0 are disabled in another option. TLS 1.2 and AES 256 get enabled and NULL encryption is always disabled with this cmdlet.
+This cmdlet has the option to disable the weak ciphers such as TipleDES, RC4, and disabled null. SSL 2.0, 3.0, TLS 1.0 are disabled in another option. TLSv1.2, TLSv1.3 and AES 256 get enabled and NULL encryption is always disabled with this cmdlet.
 
 
 .PARAMETER CISBenchmarkRecommendations
@@ -37,7 +37,7 @@ Indicates you want to disable TLSv11
 
 .EXAMPLE
 Disable-WeakSSL -WeakTLSCipherSuites -TripleDES -RC4 -SSLv2 -SSLv3 -TLSv1 -TLSv11
-# This enables TLSv1.2, disables Null encryption, TripleDES, RC4, SSLv2, SSLv3, TLSv1, and TLSv1.1. This leaves AES 128 available for use as well as AES 256
+# This enables TLSv1.2, TLSv1.3 and disables Null encryption, TripleDES, RC4, SSLv2, SSLv3, TLSv1, and TLSv1.1. This leaves AES 128 available for use as well as AES 256
 
 
 .EXAMPLE
@@ -271,5 +271,15 @@ Function Disable-WeakSSL {
     New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.2\Client' -Name 'Enabled' -Value '1' -PropertyType 'DWord' -Force | Out-Null
     New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.2\Server' -Name 'DisabledByDefault' -Value '0' -PropertyType 'DWord' -Force | Out-Null 
     New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.2\Client' -Name 'DisabledByDefault' -Value '0' -PropertyType 'DWord' -Force | Out-Null 
+
+
+    Write-Verbose "Enabling TLS 1.3"
+    
+    New-Item -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.3\Server' -Force | Out-Null
+    New-Item -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.3\Client' -Force | Out-Null
+    New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.3\Server' -Name 'Enabled' -Value '1' -PropertyType 'DWord' -Force | Out-Null
+    New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.3\Client' -Name 'Enabled' -Value '1' -PropertyType 'DWord' -Force | Out-Null
+    New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.3\Server' -Name 'DisabledByDefault' -Value '0' -PropertyType 'DWord' -Force | Out-Null 
+    New-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.3\Client' -Name 'DisabledByDefault' -Value '0' -PropertyType 'DWord' -Force | Out-Null 
 
 } # End Function Disable-WeakSSL
