@@ -65,4 +65,7 @@ Else
 
     }  # End Else
 
+    Write-Output "[*] Removing the downloaded installer file"
+    Remove-Item -Path $HotFixInstallFile -Force
+
 }  # End Else
