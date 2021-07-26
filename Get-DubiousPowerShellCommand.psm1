@@ -5,7 +5,7 @@
     There is no silver bullet for this. I suggest watching https://www.youtube.com/watch?v=x97ejtv56xw to become more familiar with
     different powershell code obfuscations. Make sure you are logging. I have turned my back on this script though feel free to build
     on this if you have better ideas.
-    
+
     This is best used as a scheduled task that runs every 15 minutes. It checks the event log for maliciously used powershell commands
     Servers require more protections than everyday desktops. That is what this is meant for.
 
@@ -22,7 +22,18 @@
     Author: Rob Osborne
     Alias: tobor
     Contact: rosborne@osbornepro.commands
-    https://roberthosborne.com
+
+
+.LINK
+https://osbornepro.com
+https://writeups.osbornepro.com
+https://github.com/tobor88
+https://gitlab.com/tobor88
+https://www.powershellgallery.com/profiles/tobor
+https://www.linkedin.com/in/roberthosborne/
+https://www.credly.com/users/roberthosborne/badges
+https://www.hackthebox.eu/profile/52286
+
 
 .EXAMPLE
     Get-DubiousPowerShellCommand -To alert@osbornepro.com -From alerter@osbornepro.com -SmtpServer mail.smtp2go.com -Verbose
@@ -101,7 +112,7 @@ Function Get-DubiousPowerShellCommand {
         Else
         {
 
-            Write-Host "A malicious command may have been found..." -ForegroundColor Red 
+            Write-Host "A malicious command may have been found..." -ForegroundColor Red
 
         }  # End Else
 
