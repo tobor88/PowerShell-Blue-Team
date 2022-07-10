@@ -44,3 +44,6 @@ If (!(Test-Path -Path $FilePath)) {
 }  # End If
 
 Start-Process -FilePath $FilePath -ArgumentList @("/accepteula", $User, $Domain, $Password) -Wait
+
+Write-Output "[*] Verify the DefaultLogonPassword value below is empty"
+Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\Currentversion\Winlogon" | Select-Object -Property "DefaultUserName","DefaultPassword"
