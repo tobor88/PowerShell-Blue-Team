@@ -29,7 +29,7 @@ Switch -Wildcard ($User) {
 
 If ($Domain.Length -lt 2) {
 
-    $Domain = $env:COMPUTERNAME
+    $Domain = $env:USERDOMAIN
 
 }  # End If
 
