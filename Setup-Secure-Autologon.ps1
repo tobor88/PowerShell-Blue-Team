@@ -21,9 +21,23 @@ If (($AutoLoginCreds).DefaultPassword) {
 
 Switch -Wildcard ($User) {
 
-    "*@*" { $Domain = $User.Split("@")[-1] }
-    "*\*" { $Domain = $User.Split("\")[0] }
-    Default { $Domain = Read-Host -Prompt "Enter a Domain for the autologin account `nEXAMPLE: domain.com : " }
+    "*@*" { 
+    
+        $Domain = $User.Split("@")[-1]
+        $User = $User.Split("@")[0]
+    
+    }
+    "*\*" { 
+    
+        $Domain = $User.Split("\")[0]
+        $User = $User.Split("\")[-1]
+    
+    }
+    Default { 
+    
+        $Domain = Read-Host -Prompt "Enter a Domain for the autologin account `nEXAMPLE: domain.com : " 
+    
+    }
 
 }  # End Switch
 
