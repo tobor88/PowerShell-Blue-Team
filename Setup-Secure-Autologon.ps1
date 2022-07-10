@@ -15,7 +15,7 @@ If (($AutoLoginCreds).DefaultPassword) {
     Write-Output "[*] Credentials required for autologin"
     $Credential = Get-Credential -Message "Enter the credentials of the auto login user"
     $User = $Credential.Username
-    $Password = $Credential.NetworkCredential().Password
+    $Password = $Credential.GetNetworkCredential().Password
 
 }  # End If Else
 
