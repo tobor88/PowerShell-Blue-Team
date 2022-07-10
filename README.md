@@ -16,6 +16,12 @@ REFERENCE [CIS Benchmarks](https://workbench.cisecurity.org/benchmarks)
 PS> Disable-WeakSSL [ -WeakCiphers ] [ -StrongAES ] [ -WeakSSLandTLS ]
 ```
 
+- ### Setup-Secure-Autologon.ps1
+This script is used to encrypt the autologin password. If autologin is currently set up it will encrypt the clear text password. If it is not set up already you will be prompted for credentials to use
+```powershell
+PS> .\Setup-Secure-Autologon.ps1
+```
+
 - ### Resolve-CVE-2017-8529.ps1
 This cmdlet is meant to be run to patch the CVE-2017-8529 vulnerability on Windows computers for 64 or 32 bit architectures. This does not take any parameters other them common parameters.
 ```powershell
