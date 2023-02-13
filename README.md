@@ -55,6 +55,13 @@ This script is meant to be run using task scheduler in response to DNS Server Ev
 PS> .\DNSZoneTransferAlert.ps1
 ```
 
+- ### Test-SslOptions.ps1
+This function is used to check the TLS protocols and algorithms a device is capable of using. It also returns certificate information
+```powershell
+PS> Test-SslOptions -UrlDomain "osbornepro.com" -Port 443
+PS> "osbornepro.com","btpssecpack.osbornepro.com","encrypit.osbornepro.com","writeups.osbornepro.com" | Test-SslOptions -Port 443
+```
+
 - ### Get-DubiousPowerShellCommand.psm1
 This function is meant to be used as a scheduled task on servers. PowerShell command logging will need to be enabled for this to work. There are arguments on whether or not this should be done. I am a believer that the input should be logged. Anyway, this checks the event log for maliciously used powershell commands. This includes commands such as __vssadmin__ (watches for NTDS.dit password extraction on domain controllers), __IEX__ (watches for remotely issued commands), and __bitsadmin/Start-BitsTransfer__ and __certutil -urlcache -split -f__ (watches for donwloading to a device through the command line).
 ```powershell
