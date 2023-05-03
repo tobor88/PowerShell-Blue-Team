@@ -16,6 +16,12 @@ REFERENCE [CIS Benchmarks](https://workbench.cisecurity.org/benchmarks)
 PS> Disable-WeakSSL [ -WeakCiphers ] [ -StrongAES ] [ -WeakSSLandTLS ]
 ```
 
+- ### Remove-RansomwareNote.ps1
+This script is used to delete ransomware notes saved to a large number of locations on multiple servers using SMB mapped drives
+```powershell
+PS> Remove-RansomwareNote -ComputerName "dc01","files","desktop1" -FileName "Ransom.txt" -Credential $LiveCred
+```
+
 - ### Setup-Secure-Autologon.ps1
 This script is used to encrypt the autologin password. If autologin is currently set up it will encrypt the clear text password. If it is not set up already you will be prompted for credentials to use
 ```powershell
